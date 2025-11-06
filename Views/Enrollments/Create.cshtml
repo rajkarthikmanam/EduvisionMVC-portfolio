@@ -1,0 +1,28 @@
+@model EduvisionMvc.Models.Enrollment
+@{
+    ViewData["Title"] = "Create Enrollment";
+}
+<h1>Create Enrollment</h1>
+<form asp-action="Create" method="post">
+    <div class="mb-3">
+        <label asp-for="StudentId" class="form-label"></label>
+        <select asp-for="StudentId" class="form-select" asp-items="ViewBag.StudentId"></select>
+        <span asp-validation-for="StudentId" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="CourseId" class="form-label"></label>
+        <select asp-for="CourseId" class="form-select" asp-items="ViewBag.CourseId"></select>
+        <span asp-validation-for="CourseId" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Term" class="form-label"></label>
+        <input asp-for="Term" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Numeric_Grade" class="form-label"></label>
+        <input asp-for="Numeric_Grade" class="form-control" />
+    </div>
+    <button class="btn btn-primary">Save</button>
+    <a asp-action="Index" class="btn btn-link">Cancel</a>
+</form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

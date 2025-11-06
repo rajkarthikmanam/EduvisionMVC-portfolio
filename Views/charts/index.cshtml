@@ -1,0 +1,44 @@
+@{
+    ViewData["Title"] = "Visualization";
+}
+
+<h1 class="text-center mt-4 text-primary">Visualization – Average Grades</h1>
+<div class="container mt-5">
+    <canvas id="gradesChart" width="700" height="350"></canvas>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+fetch('/api/charts/gradesByCourse')
+  .then(r => r.json())
+  .then(data => {
+    const labels = data.map(d => d.course || d.Course);
+    const values = data.map(d => d.avgGrade || d.AvgGrade);
+    new Chart(document.getElementById('gradesChart'), {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Average Grade by Course',
+          data: values,
+          backgroundColor: 'rgba(54,162,235,0.6)',
+          borderColor: 'rgba(54,162,235,1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: 'Average Grade' } },
+          x: { title: { display: true, text: 'Course' } }
+        }
+      }
+    });
+  })
+  .catch(err => {
+    document.body.insertAdjacentHTML("beforeend",
+      `<p class='text-danger text-center mt-3'>Failed to load chart: ${err.message}</p>`);
+  });
+</script>
+}
