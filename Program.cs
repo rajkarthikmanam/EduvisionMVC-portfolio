@@ -1,16 +1,18 @@
 using EduvisionMvc.Data;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 var builder = WebApplication.CreateBuilder(args);
 
-// DbContext (SQLite dev)
+// --- Database context ---
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// MVC
+// --- MVC setup ---
 builder.Services.AddControllersWithViews();
 
-// ✅ HttpClient for API (and a named client)
+// --- HttpClient setup ---
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient("openlib", c =>
 {
@@ -20,13 +22,14 @@ builder.Services.AddHttpClient("openlib", c =>
 
 var app = builder.Build();
 
-// (Dev) make sure DB exists & migrations apply
+// --- Apply migrations & ensure DB exists ---
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
 }
 
+// --- Middleware ---
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -42,19 +45,19 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// ✅ JSON for Chart.js — average grade by course
+// --- Chart API endpoint ---
 app.MapGet("/api/charts/gradesByCourse", async (AppDbContext db) =>
 {
-    var q = db.Enrollments
+    var q = await db.Enrollments
         .Include(e => e.Course)
         .GroupBy(e => e.Course!.Code)
         .Select(g => new
         {
             code = g.Key,
-            avg = Math.Round((double)g.Average(x => x.Numeric_Grade), 2)
+            avg = Math.Round(g.Average(x => Convert.ToDouble(x.Numeric_Grade)), 2)
         })
         .OrderBy(x => x.code)
-        .ToList();
+        .ToListAsync();
 
     return Results.Json(new
     {
