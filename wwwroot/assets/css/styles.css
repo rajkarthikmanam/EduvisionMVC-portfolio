@@ -1,0 +1,228 @@
+/* ===== EduVision base theme (clean) ===== */
+:root{
+  --brand:#2563eb;
+  --brand-dark:#1e40af;
+  --bg:#f8fafc;
+  --text:#0f172a;
+  --radius:12px;
+  --shadow:0 6px 16px rgba(2,6,23,.08);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+.container{max-width:1100px;margin:0 auto;padding:24px}
+
+/* --- Navigation --- */
+.nav{
+  position:sticky;top:0;z-index:10;
+  display:flex;gap:12px;flex-wrap:wrap;
+  background:#fff;border-bottom:1px solid #e5e7eb;
+  padding:12px 24px;
+  backdrop-filter:saturate(160%) blur(6px);
+}
+.nav a{
+  color:#0f172a;text-decoration:none;
+  padding:8px 10px;border-radius:8px;
+  transition:background .15s ease,color .15s ease;
+}
+.nav a.active{background:#e5edff;font-weight:600}
+.nav a:hover{text-decoration:underline}
+
+/* --- Headings --- */
+h1{margin:16px 0 8px;font-size:42px;line-height:1.15;letter-spacing:.2px}
+h2{margin:16px 0;font-size:26px}
+
+/* --- Buttons --- */
+.btn{
+  display:inline-block;
+  background:var(--brand);color:#fff;
+  padding:10px 14px;border-radius:8px;text-decoration:none;
+  box-shadow:var(--shadow);
+  transition:transform .06s ease, box-shadow .2s ease, background .15s ease;
+}
+.btn:hover{background:var(--brand-dark)}
+.btn:focus{outline:2px solid #bfdbfe;outline-offset:3px}
+.btn:active{transform:translateY(1px)}
+
+/* --- Inputs/Selects --- */
+input,select{
+  width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;
+  background:#fff;transition:box-shadow .2s ease,border-color .2s ease;
+}
+input:focus,select:focus{
+  outline:none;border-color:#93c5fd;
+  box-shadow:0 0 0 3px rgba(147,197,253,.45);
+}
+
+/* --- Notes / Panels --- */
+.note{
+  background:#eef2ff;border:1px dashed #93c5fd;padding:12px;
+  border-radius:12px;box-shadow:var(--shadow);
+}
+
+/* --- Tables --- */
+.table{
+  width:100%;border-collapse:collapse;background:#fff;
+  border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;
+}
+.table thead th{
+  background:#f1f5f9;font-weight:600;text-align:left;padding:10px 12px;
+}
+.table td{padding:10px 12px;border-bottom:1px solid #e5e7eb}
+.table tbody tr:nth-child(even){background:#f8fafc}
+.table tbody tr:hover{background:#eef2ff}
+
+/* --- Utility --- */
+.small{font-size:14px;color:#475569}
+.rounded{border-radius:var(--radius);overflow:hidden}
+
+/* For chart grids if needed later */
+.grid-3{display:grid;gap:16px;grid-template-columns:repeat(3,1fr)}
+@media (max-width:900px){
+  .grid-3{grid-template-columns:1fr}
+  h1{font-size:34px}
+}
+
+/* --- ERD / Diagram images --- */
+img.erd, .figure-erd img{
+  display:block;background:#fff;padding:12px;
+  border:1px solid #cbd5e1;border-radius:12px;
+  box-shadow:var(--shadow);filter:contrast(1.05) saturate(1.02);
+  max-width:100%;height:auto;
+}
+
+/* ERD card for Mermaid */
+.erd-card{
+  background:#fff;
+  padding:16px;
+  border:1px solid #cbd5e1;
+  border-radius:12px;
+  box-shadow: 0 6px 16px rgba(2,6,23,.08);
+  overflow:auto;
+}
+
+/* 1. Card hover animations */
+.table, .note, .erd-card, .figure-erd img {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.table:hover, .note:hover, .erd-card:hover, .figure-erd img:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(2,6,23,.15);
+}
+
+/* 2. Gradient text for h1 */
+h1 {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 3. Enhanced active nav state */
+.nav a.active {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  border-bottom: 3px solid var(--brand);
+  font-weight: 600;
+}
+
+/* 4. Smooth button press effect */
+.btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 8px rgba(2,6,23,.1);
+}
+
+
+/* Desktop-only hover lift; avoid jump on touch devices */
+@media (hover:hover) and (pointer:fine){
+  .table, .note, .erd-card, .figure-erd img {
+    transition: transform .2s ease, box-shadow .2s ease;
+    will-change: transform;
+  }
+  .table:hover, .note:hover, .erd-card:hover, .figure-erd img:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(2,6,23,.15);
+  }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .table, .note, .erd-card, .figure-erd img, .btn, .nav a {
+    transition: none !important;
+  }
+}
+
+/* Active nav underline without layout shift (overrides border-bottom version) */
+.nav a.active{
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  box-shadow: inset 0 -3px 0 0 var(--brand);
+  font-weight: 600;
+}
+
+/* Team section */
+.team-section{ margin-top:20px; display:grid; gap:16px }
+.team-section h2{ margin-top:8px }
+.team-member{
+  background:#fff; border:1px solid #e5e7eb; border-radius:12px;
+  padding:14px 16px; box-shadow: 0 6px 16px rgba(2,6,23,.06);
+}
+.team-member h3{ margin:6px 0 6px; font-size:18px }
+.team-member ul{ margin:8px 0 0 18px }
+.team-member li{ margin:4px 0 }
+
+
+/* Chart grid and cards */
+.chart-grid{
+  display:grid;
+  gap:18px;
+  grid-template-columns:repeat(3,1fr);
+}
+.card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  padding:14px;
+  box-shadow: var(--shadow);
+}
+.chart-card canvas{
+  width:100% !important;
+  height:auto !important;
+}
+@media (max-width: 980px){
+  .chart-grid{ grid-template-columns:1fr; }
+}
+
+/* Desktop-only hover lift; avoid jump on touch devices */
+@media (hover:hover) and (pointer:fine){
+  .table, .note, .erd-card, .figure-erd img, .card {
+    transition: transform .2s ease, box-shadow .2s ease;
+    will-change: transform;
+  }
+  .table:hover, .note:hover, .erd-card:hover, .figure-erd img:hover, .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(2,6,23,.15);
+  }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .table, .note, .erd-card, .figure-erd img, .btn, .nav a, .card {
+    transition: none !important;
+  }
+}
+
+/* Active nav underline without layout shift (overrides border-bottom) */
+.nav a.active{
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  box-shadow: inset 0 -3px 0 0 var(--brand);
+  font-weight: 600;
+}
+
+/* Focus ring for keyboard users */
+:focus-visible{ outline:2px solid #93c5fd; outline-offset:3px }
+
