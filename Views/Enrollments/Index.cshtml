@@ -1,0 +1,47 @@
+@model IEnumerable<EduvisionMvc.Models.Enrollment>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Enrollments</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Student</th>
+            <th>Course</th>
+            <th>Instructors</th>
+            <th>Term</th>
+            <th>Numeric Grade</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var e in Model)
+{
+    var instructors = (e.Course?.CourseInstructors ?? new List<EduvisionMvc.Models.CourseInstructor>())
+                      .Select(ci => ci.Instructor != null
+                          ? $"{ci.Instructor.FirstName} {ci.Instructor.LastName}".Trim()
+                          : "")
+                      .Where(s => !string.IsNullOrWhiteSpace(s));
+    <tr>
+        <td>@e.Student?.Name</td>
+        <td>@e.Course?.Title</td>
+        <td>@string.Join(", ", instructors)</td>
+        <td>@e.Term</td>
+        <td>@e.Numeric_Grade</td>
+        <td>
+            <a asp-action="Edit" asp-route-id="@e.Id">Edit</a> |
+            <a asp-action="Details" asp-route-id="@e.Id">Details</a> |
+            <a asp-action="Delete" asp-route-id="@e.Id">Delete</a>
+        </td>
+    </tr>
+}
+    </tbody>
+</table>

@@ -1,0 +1,48 @@
+@{
+    ViewData["Title"] = "API Demo – Book Finder";
+}
+
+<h1 class="display-5 mb-3">API Demo – Book Finder</h1>
+
+<div class="input-group mb-3">
+    <input id="query" class="form-control" placeholder="Enter a topic (e.g., machine learning)" />
+    <button id="go" class="btn btn-primary">Fetch Books</button>
+</div>
+
+<pre id="status" class="text-muted"></pre>
+
+<div class="table-responsive mt-3" id="wrap" style="display:none">
+    <table class="table table-bordered table-striped">
+        <thead><tr><th>Title</th><th>Author(s)</th><th>Year</th></tr></thead>
+        <tbody id="rows"></tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>
+const $ = s => document.querySelector(s);
+$("#go").addEventListener("click", async () => {
+  const q = $("#query").value.trim() || "education";
+  $("#status").textContent = "Fetching data...";
+  $("#rows").innerHTML = "";
+  $("#wrap").style.display = "none";
+
+  try {
+    const res = await fetch(`/api/api/books?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+
+    if (!data.ok) throw new Error(data.error || "No response");
+
+    $("#status").textContent = `Found ${data.items.length} books from ${data.source}`;
+    data.items.forEach(b => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${b.title}</td><td>${b.author}</td><td>${b.year}</td>`;
+      $("#rows").appendChild(tr);
+    });
+    $("#wrap").style.display = "block";
+  } catch (err) {
+    $("#status").textContent = "Error: " + err.message;
+  }
+});
+</script>
+}
