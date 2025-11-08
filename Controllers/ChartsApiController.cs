@@ -2,24 +2,39 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EduvisionMvc.Data;
 
-namespace EduvisionMvc.Controllers;
-
-[ApiController]
-[Route("api/charts")]
-public class ChartsApiController : ControllerBase
+namespace EduvisionMvc.Controllers
 {
-    private readonly AppDbContext _db;
-    public ChartsApiController(AppDbContext db) => _db = db;
-
-    [HttpGet("gradesByCourse")]
-    public async Task<IActionResult> GradesByCourse()
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ChartsApiController : ControllerBase
     {
-        var data = await _db.Enrollments
-            .Include(e => e.Course)
-            .GroupBy(e => e.Course!.Title)
-            .Select(g => new { Course = g.Key, AvgGrade = Math.Round(g.Average(e => e.Numeric_Grade), 2) })
-            .ToListAsync();
+        private readonly AppDbContext _db;
 
-        return Ok(data);
-    }
+        public ChartsApiController(AppDbContext db)
+        {
+            _db = db;
+        }
+
+        // ✅ GET: /api/chartsapi/gradesbycourse
+        [HttpGet("gradesByCourse")]
+public async Task<IActionResult> GetGradesByCourse()
+{
+    var q = await Task.Run(() =>
+        _db.Enrollments
+            .Include(e => e.Course)
+            .AsEnumerable()  // forces client-side evaluation
+            .GroupBy(e => e.Course?.Code ?? "Unknown")
+            .Select(g => new
+            {
+                code = g.Key,
+                avg = Math.Round(g.Average(x => (double)x.Numeric_Grade), 2)
+            })
+            .OrderBy(x => x.code)
+            .ToList()   // 👈 regular ToList (NOT ToListAsync)
+    );
+
+    return Ok(q);
 }
+
+        }
+    }
