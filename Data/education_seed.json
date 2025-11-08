@@ -1,0 +1,76 @@
+{
+  "departments": [
+    {"Id":1,"Name":"Computer Science"},
+    {"Id":2,"Name":"Mathematics"},
+    {"Id":3,"Name":"Electrical Engineering"},
+    {"Id":4,"Name":"Business"},
+    {"Id":5,"Name":"Environmental Science"}
+  ],
+  "instructors": [
+    {"Id":1,"FirstName":"Ada","LastName":"Lovelace","Email":"ada@univ.edu","DepartmentId":1},
+    {"Id":2,"FirstName":"Alan","LastName":"Turing","Email":"alan@univ.edu","DepartmentId":1},
+    {"Id":3,"FirstName":"Katherine","LastName":"Johnson","Email":"k.johnson@univ.edu","DepartmentId":2},
+    {"Id":4,"FirstName":"Carl","LastName":"Gauss","Email":"gauss@univ.edu","DepartmentId":2},
+    {"Id":5,"FirstName":"Nikola","LastName":"Tesla","Email":"tesla@univ.edu","DepartmentId":3},
+    {"Id":6,"FirstName":"Grace","LastName":"Hopper","Email":"grace@univ.edu","DepartmentId":1},
+    {"Id":7,"FirstName":"Elon","LastName":"Musk","Email":"elon@univ.edu","DepartmentId":4},
+    {"Id":8,"FirstName":"Rachel","LastName":"Carson","Email":"rachel@univ.edu","DepartmentId":5},
+    {"Id":9,"FirstName":"Marie","LastName":"Curie","Email":"marie@univ.edu","DepartmentId":3},
+    {"Id":10,"FirstName":"Tim","LastName":"Berners-Lee","Email":"tim@univ.edu","DepartmentId":1}
+  ],
+  "courses": [
+    {"Id":1,"Code":"CS101","Title":"Intro to CS","Credits":3,"DepartmentId":1},
+    {"Id":2,"Code":"CS201","Title":"Data Structures","Credits":4,"DepartmentId":1},
+    {"Id":3,"Code":"MTH201","Title":"Calculus I","Credits":4,"DepartmentId":2},
+    {"Id":4,"Code":"MTH301","Title":"Linear Algebra","Credits":3,"DepartmentId":2},
+    {"Id":5,"Code":"EE210","Title":"Circuits","Credits":3,"DepartmentId":3},
+    {"Id":6,"Code":"EE350","Title":"Signals & Systems","Credits":4,"DepartmentId":3},
+    {"Id":7,"Code":"BUS101","Title":"Principles of Management","Credits":3,"DepartmentId":4},
+    {"Id":8,"Code":"BUS220","Title":"Business Analytics","Credits":3,"DepartmentId":4},
+    {"Id":9,"Code":"ENV110","Title":"Intro to Sustainability","Credits":3,"DepartmentId":5},
+    {"Id":10,"Code":"ENV320","Title":"Environmental Data","Credits":4,"DepartmentId":5}
+  ],
+  "students": [
+    {"Id":1,"Name":"Ava","Major":"CS","Age":20,"Gpa":3.72},
+    {"Id":2,"Name":"Liam","Major":"Math","Age":21,"Gpa":3.55},
+    {"Id":3,"Name":"Noah","Major":"EE","Age":22,"Gpa":3.30},
+    {"Id":4,"Name":"Emma","Major":"CS","Age":19,"Gpa":3.90},
+    {"Id":5,"Name":"Olivia","Major":"BUS","Age":20,"Gpa":3.65},
+    {"Id":6,"Name":"Ethan","Major":"ENV","Age":23,"Gpa":3.25},
+    {"Id":7,"Name":"Sophia","Major":"Math","Age":21,"Gpa":3.80},
+    {"Id":8,"Name":"Mason","Major":"EE","Age":22,"Gpa":3.10},
+    {"Id":9,"Name":"Isabella","Major":"CS","Age":20,"Gpa":3.95},
+    {"Id":10,"Name":"James","Major":"BUS","Age":24,"Gpa":3.40}
+  ],
+  "enrollments": [
+    {"Id":1,"StudentId":1,"CourseId":1,"Term":"Fall 2025","Numeric_Grade":3.8},
+    {"Id":2,"StudentId":2,"CourseId":3,"Term":"Fall 2025","Numeric_Grade":3.6},
+    {"Id":3,"StudentId":3,"CourseId":5,"Term":"Fall 2025","Numeric_Grade":3.2},
+    {"Id":4,"StudentId":4,"CourseId":2,"Term":"Fall 2025","Numeric_Grade":3.9},
+    {"Id":5,"StudentId":5,"CourseId":7,"Term":"Fall 2025","Numeric_Grade":3.5},
+    {"Id":6,"StudentId":6,"CourseId":9,"Term":"Fall 2025","Numeric_Grade":3.1},
+    {"Id":7,"StudentId":7,"CourseId":4,"Term":"Fall 2025","Numeric_Grade":3.7},
+    {"Id":8,"StudentId":8,"CourseId":6,"Term":"Fall 2025","Numeric_Grade":3.0},
+    {"Id":9,"StudentId":9,"CourseId":2,"Term":"Fall 2025","Numeric_Grade":4.0},
+    {"Id":10,"StudentId":10,"CourseId":8,"Term":"Fall 2025","Numeric_Grade":3.3},
+    {"Id":11,"StudentId":1,"CourseId":2,"Term":"Spring 2026","Numeric_Grade":3.7},
+    {"Id":12,"StudentId":2,"CourseId":4,"Term":"Spring 2026","Numeric_Grade":3.5},
+    {"Id":13,"StudentId":4,"CourseId":1,"Term":"Spring 2026","Numeric_Grade":3.8},
+    {"Id":14,"StudentId":5,"CourseId":8,"Term":"Spring 2026","Numeric_Grade":3.6},
+    {"Id":15,"StudentId":9,"CourseId":1,"Term":"Spring 2026","Numeric_Grade":3.9}
+  ],
+  "courseInstructors": [
+    {"CourseId":1,"InstructorId":1},
+    {"CourseId":2,"InstructorId":2},
+    {"CourseId":3,"InstructorId":3},
+    {"CourseId":4,"InstructorId":4},
+    {"CourseId":5,"InstructorId":5},
+    {"CourseId":6,"InstructorId":9},
+    {"CourseId":7,"InstructorId":7},
+    {"CourseId":8,"InstructorId":7},
+    {"CourseId":9,"InstructorId":8},
+    {"CourseId":10,"InstructorId":8},
+    {"CourseId":2,"InstructorId":6},
+    {"CourseId":1,"InstructorId":10}
+  ]
+}
