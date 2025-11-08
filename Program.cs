@@ -42,22 +42,25 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-<<<<<<< HEAD
-// (Optional) JSON for chart from Enrollments DB data
-// Karthik: JSON for Chart.js (avg grade by course)`r`n// Karthik: JSON for Chart.js (avg grade by course)`r`napp.MapGet("/api/charts/gradesByCourse", async (AppDbContext db) =>
+// ✅ JSON for Chart.js — average grade by course
+app.MapGet("/api/charts/gradesByCourse", async (AppDbContext db) =>
 {
     var q = db.Enrollments
         .Include(e => e.Course)
         .GroupBy(e => e.Course!.Code)
-        .Select(g => new { code = g.Key, avg = Math.Round((double)g.Average(x => x.Numeric_Grade), 2) })
+        .Select(g => new
+        {
+            code = g.Key,
+            avg = Math.Round((double)g.Average(x => x.Numeric_Grade), 2)
+        })
         .OrderBy(x => x.code)
         .ToList();
 
-    return Results.Json(new { labels = q.Select(x => x.code), values = q.Select(x => x.avg) });
+    return Results.Json(new
+    {
+        labels = q.Select(x => x.code),
+        values = q.Select(x => x.avg)
+    });
 });
 
-=======
->>>>>>> 9be398a5927e79c2a3ee5d52169757d70303a88b
 app.Run();
-
-
