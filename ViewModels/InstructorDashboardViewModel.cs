@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using EduvisionMvc.Models;
 
 namespace EduvisionMvc.ViewModels;
@@ -5,6 +6,7 @@ namespace EduvisionMvc.ViewModels;
 public class InstructorDashboardViewModel
 {
     // Instructor Info
+    public int InstructorId { get; set; }
     public string Name { get; set; } = "";
     public string Department { get; set; } = "";
     public string Email { get; set; } = "";
@@ -16,6 +18,9 @@ public class InstructorDashboardViewModel
     public List<int> EnrollmentCounts { get; set; } = new();
     public List<string> GradeLabels { get; set; } = new();
     public List<int> GradeDistribution { get; set; } = new();
+    
+    // Polar Area Chart: Grade comparison across courses
+    public List<PolarChartData> CourseGradeComparison { get; set; } = new();
 
     // Course Lists
     public List<CourseStatistics> CurrentCourses { get; set; } = new();
@@ -60,3 +65,4 @@ public class StudentPerformance
     public int CoursesCompleted { get; set; }
     public List<string> CompletedCourses { get; set; } = new();
 }
+
