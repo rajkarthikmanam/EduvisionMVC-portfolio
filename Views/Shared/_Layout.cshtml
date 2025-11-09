@@ -8,11 +8,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>@ViewData["Title"] - EduvisionMvc</title>
 
-  <!-- Bootstrap (keep) -->
+  <!-- Bootstrap and theme -->
   <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-
-  <!-- Your theme (keep) -->
-  <link rel="stylesheet" href="~/assets/css/styles.css" asp-append-version="true" />
+  <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
   <!-- Botpress loader + embed styles -->
   <script src="https://cdn.botpress.cloud/webchat/v3.3/inject.js"></script>
@@ -24,14 +28,45 @@
       max-height: 100%;
       max-width: 100%;
     }
-    #webchat .bpFab { display: none; } /* hide floating FAB since we embed the panel */
+
+    #webchat .bpFab { display: none; }
+
+    .theme-toggle {
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 0.375rem;
+      margin-left: 1rem;
+      color: var(--text);
+    }
+    
+    .dropdown-menu {
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: var(--shadow);
+    }
+    
+    .dropdown-item {
+      color: var(--text);
+    }
+    
+    .dropdown-item:hover {
+      background: var(--panel-2);
+      color: white;
+    }
+    
+    .dropdown-divider {
+      border-color: rgba(255,255,255,.08);
+    }
   </style>
 </head>
 <body>
   <header>
     <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
       <div class="container-fluid">
-        <a class="navbar-brand" asp-controller="Home" asp-action="Index">EDUVISION</a>
+        <a class="navbar-brand d-flex align-items-center" asp-controller="Home" asp-action="Index">
+          <i class="fas fa-graduation-cap me-2"></i>
+          <span class="fw-bold">EDU<span class="text-primary">VISION</span></span>
+        </a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
                 aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,20 +75,69 @@
 
         <div id="mainNav" class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
           <ul class="navbar-nav flex-grow-1">
-            <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Home</a></li>
-            <li class="nav-item"><a class="nav-link" asp-controller="Charts" asp-action="Index">Visualization</a></li>
-            <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="About">About</a></li>
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center" asp-controller="Home" asp-action="Index">
+                <i class="fas fa-home me-1"></i> Home
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center" asp-controller="Charts" asp-action="Index">
+                <i class="fas fa-chart-bar me-1"></i> Analytics
+              </a>
+            </li>
+            
+            <!-- Academic Menu -->
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                <i class="fas fa-university me-1"></i> Academic
+              </a>
+              <ul class="dropdown-menu">
+                <li>
+                  <a class="dropdown-item d-flex align-items-center" asp-controller="Students" asp-action="Index">
+                    <i class="fas fa-user-graduate me-2"></i> Students
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item d-flex align-items-center" asp-controller="Courses" asp-action="Index">
+                    <i class="fas fa-book me-2"></i> Courses
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item d-flex align-items-center" asp-controller="Enrollments" asp-action="Index">
+                    <i class="fas fa-clipboard-list me-2"></i> Enrollments
+                  </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <a class="dropdown-item d-flex align-items-center" asp-controller="Departments" asp-action="Index">
+                    <i class="fas fa-building me-2"></i> Departments
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item d-flex align-items-center" asp-controller="Instructors" asp-action="Index">
+                    <i class="fas fa-chalkboard-teacher me-2"></i> Instructors
+                  </a>
+                </li>
+              </ul>
+            </li>
 
-            <!-- CRUD -->
-            <li class="nav-item"><a class="nav-link" asp-controller="Students" asp-action="Index">Students</a></li>
-            <li class="nav-item"><a class="nav-link" asp-controller="Courses" asp-action="Index">Courses</a></li>
-            <li class="nav-item"><a class="nav-link" asp-controller="Enrollments" asp-action="Index">Enrollments</a></li>
-            <li class="nav-item"><a class="nav-link" asp-controller="Departments" asp-action="Index">Departments</a></li>
-            <li class="nav-item"><a class="nav-link" asp-controller="Instructors" asp-action="Index">Instructors</a></li>
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center" asp-controller="Pages" asp-action="Api">
+                <i class="fas fa-code me-1"></i> API
+              </a>
+            </li>
 
-            <!-- API UI page (keep your Pages/Api view) -->
-            <li class="nav-item"><a class="nav-link" asp-controller="Pages" asp-action="Api">API</a></li>
+            <li class="nav-item">
+              <a class="nav-link d-flex align-items-center" asp-controller="Home" asp-action="About">
+                <i class="fas fa-info-circle me-1"></i> About
+              </a>
+            </li>
           </ul>
+
+          <!-- Theme Toggle -->
+          <div class="theme-toggle ms-2" onclick="toggleTheme()">
+            <i class="fas fa-moon"></i>
+          </div>
         </div>
       </div>
     </nav>
@@ -77,6 +161,38 @@
   <!-- Scripts -->
   <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="~/assets/js/main.js" asp-append-version="true"></script>
+
+  <!-- Theme Toggle -->
+  <script>
+    function toggleTheme() {
+      const body = document.body;
+      const icon = document.querySelector('.theme-toggle i');
+      
+      body.classList.toggle('dark-mode');
+      
+      if (body.classList.contains('dark-mode')) {
+        icon.classList.remove('fa-moon');
+        icon.classList.add('fa-sun');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        icon.classList.remove('fa-sun');
+        icon.classList.add('fa-moon');
+        localStorage.setItem('theme', 'light');
+      }
+    }
+
+    // Check for saved theme preference
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem('theme');
+      const icon = document.querySelector('.theme-toggle i');
+      
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+        icon.classList.remove('fa-moon');
+        icon.classList.add('fa-sun');
+      }
+    });
+  </script>
 
   <!-- Botpress init -->
   <script>
