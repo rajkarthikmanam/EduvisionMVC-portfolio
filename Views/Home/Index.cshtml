@@ -1,13 +1,154 @@
 ﻿@{
-  ViewData["Title"] = "Home";
+  ViewData["Title"] = "EduVision - Learning Management System";
 }
-<div class="content-card">
-  <h1>EDUVISION</h1>
-  <p class="muted">Dynamic MVC app with CRUD, API, and charts.</p>
 
-  <div style="margin-top:12px">
-    <a class="btn" asp-controller="Students" asp-action="Index">Students</a>
-    <a class="btn" asp-controller="Courses" asp-action="Index">Courses</a>
-    <a class="btn" asp-controller="Enrollments" asp-action="Index">Enrollments</a>
-  </div>
+<!-- Hero Section -->
+<div class="hero-section text-center py-5 mb-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px;">
+    <div class="container">
+        <h1 class="display-3 fw-bold mb-3">Welcome to EduVision</h1>
+        <p class="lead mb-4">A modern Learning Management System for educational excellence</p>
+        @if (User.Identity?.IsAuthenticated ?? false)
+        {
+            <div class="d-flex justify-content-center gap-3">
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-controller="AdminDashboard" asp-action="Index" class="btn btn-light btn-lg px-5">
+                        <i class="bi bi-speedometer2"></i> Admin Dashboard
+                    </a>
+                }
+                @if (User.IsInRole("Instructor"))
+                {
+                    <a asp-controller="InstructorDashboard" asp-action="Index" class="btn btn-light btn-lg px-5">
+                        <i class="bi bi-person-workspace"></i> Instructor Dashboard
+                    </a>
+                }
+                @if (User.IsInRole("Student"))
+                {
+                    <a asp-controller="StudentDashboard" asp-action="Index" class="btn btn-light btn-lg px-5">
+                        <i class="bi bi-book"></i> Student Dashboard
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="d-flex justify-content-center gap-3">
+                <a asp-controller="Account" asp-action="Login" class="btn btn-light btn-lg px-5">
+                    <i class="bi bi-box-arrow-in-right"></i> Sign In
+                </a>
+                <a asp-controller="Account" asp-action="Register" class="btn btn-outline-light btn-lg px-5">
+                    <i class="bi bi-person-plus"></i> Register
+                </a>
+            </div>
+        }
+    </div>
 </div>
+
+@if (User.Identity?.IsAuthenticated ?? false)
+{
+    <!-- Features Section (visible after login only) -->
+    <div class="container mb-5">
+        <div class="row text-center mb-4">
+            <div class="col-12">
+                <h2 class="fw-bold mb-3">Academic Tools</h2>
+                <p class="text-muted">Manage students, courses, assignments, and notifications</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <!-- Feature 1 -->
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3" style="font-size: 3rem; color: #667eea;">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <h4 class="card-title fw-bold">Student Management</h4>
+                        <p class="card-text text-muted">Profiles, enrollments, and progress tracking</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3" style="font-size: 3rem; color: #764ba2;">
+                            <i class="bi bi-journal-text"></i>
+                        </div>
+                        <h4 class="card-title fw-bold">Course Management</h4>
+                        <p class="card-text text-muted">Materials, assignments, announcements</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature 3: Role-Based Access -->
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3" style="font-size: 3rem; color: #764ba2;">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <h4 class="card-title fw-bold">Role-Based Access</h4>
+                        <p class="card-text text-muted">Admins, Instructors, Students</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature 4: Assignments -->
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3" style="font-size: 3rem; color: #667eea;">
+                            <i class="bi bi-clipboard-check"></i>
+                        </div>
+                        <h4 class="card-title fw-bold">Assignments</h4>
+                        <p class="card-text text-muted">Create, publish, and review submissions</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature 5: Notifications -->
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3" style="font-size: 3rem; color: #764ba2;">
+                            <i class="bi bi-bell"></i>
+                        </div>
+                        <h4 class="card-title fw-bold">Notifications</h4>
+                        <p class="card-text text-muted">Announcements and important updates</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Stats Section -->
+@if (User.Identity?.IsAuthenticated ?? false)
+{
+    <div class="container">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-5">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h3 class="fw-bold text-primary">500+</h3>
+                        <p class="text-muted">Active Students</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 class="fw-bold text-success">100+</h3>
+                        <p class="text-muted">Courses Offered</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 class="fw-bold text-warning">50+</h3>
+                        <p class="text-muted">Expert Instructors</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 class="fw-bold text-info">1000+</h3>
+                        <p class="text-muted">Enrollments</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}

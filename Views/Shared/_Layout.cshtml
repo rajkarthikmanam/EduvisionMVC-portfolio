@@ -15,12 +15,27 @@
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <!-- SignalR -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js" integrity="sha512-9Qx2b6x9h4bq8oR7VbZV8Xv3mG0e+4y2h8k2v6tKXKqvSy2yqk3t1z8rY7H1dY9dWwqE5vE0QfQ+7s3IQs1CwQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
   <!-- Botpress loader + embed styles -->
   <script src="https://cdn.botpress.cloud/webchat/v3.3/inject.js"></script>
   <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    main {
+      flex: 1;
+    }
+
     #webchat .bpWebchat {
       position: unset;
       width: 100%;
@@ -73,53 +88,61 @@
           <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div id="mainNav" class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+  <div id="mainNav" class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
           <ul class="navbar-nav flex-grow-1">
             <li class="nav-item">
               <a class="nav-link d-flex align-items-center" asp-controller="Home" asp-action="Index">
                 <i class="fas fa-home me-1"></i> Home
               </a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link d-flex align-items-center" asp-controller="Charts" asp-action="Index">
-                <i class="fas fa-chart-bar me-1"></i> Analytics
-              </a>
-            </li>
-            
-            <!-- Academic Menu -->
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
-                <i class="fas fa-university me-1"></i> Academic
-              </a>
-              <ul class="dropdown-menu">
-                <li>
-                  <a class="dropdown-item d-flex align-items-center" asp-controller="Students" asp-action="Index">
-                    <i class="fas fa-user-graduate me-2"></i> Students
-                  </a>
-                </li>
-                <li>
-                  <a class="dropdown-item d-flex align-items-center" asp-controller="Courses" asp-action="Index">
-                    <i class="fas fa-book me-2"></i> Courses
-                  </a>
-                </li>
-                <li>
-                  <a class="dropdown-item d-flex align-items-center" asp-controller="Enrollments" asp-action="Index">
-                    <i class="fas fa-clipboard-list me-2"></i> Enrollments
-                  </a>
-                </li>
-                <li><hr class="dropdown-divider"></li>
-                <li>
-                  <a class="dropdown-item d-flex align-items-center" asp-controller="Departments" asp-action="Index">
-                    <i class="fas fa-building me-2"></i> Departments
-                  </a>
-                </li>
-                <li>
-                  <a class="dropdown-item d-flex align-items-center" asp-controller="Instructors" asp-action="Index">
-                    <i class="fas fa-chalkboard-teacher me-2"></i> Instructors
-                  </a>
-                </li>
-              </ul>
-            </li>
+            @if (User.IsInRole("Admin"))
+            {
+              <li class="nav-item">
+                <a class="nav-link d-flex align-items-center" asp-controller="AdminDashboard" asp-action="Index">
+                  <i class="fas fa-gauge-high me-1"></i> Admin Dashboard
+                </a>
+              </li>
+            }
+            @* Analytics removed per request *@
+            @if (User.IsInRole("Admin"))
+            {
+              @* Keep only Admin Dashboard; remove duplicate Admin menu *@
+              
+              <!-- Academic Menu - Admin Only -->
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                  <i class="fas fa-university me-1"></i> Academic
+                </a>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a class="dropdown-item d-flex align-items-center" asp-controller="Students" asp-action="Index">
+                      <i class="fas fa-user-graduate me-2"></i> Students
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item d-flex align-items-center" asp-controller="Courses" asp-action="Index">
+                      <i class="fas fa-book me-2"></i> Courses
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item d-flex align-items-center" asp-controller="Enrollments" asp-action="Index">
+                      <i class="fas fa-clipboard-list me-2"></i> Enrollments
+                    </a>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li>
+                    <a class="dropdown-item d-flex align-items-center" asp-controller="Departments" asp-action="Index">
+                      <i class="fas fa-building me-2"></i> Departments
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item d-flex align-items-center" asp-controller="Instructors" asp-action="Index">
+                      <i class="fas fa-chalkboard-teacher me-2"></i> Instructors
+                    </a>
+                  </li>
+                </ul>
+              </li>
+            }
 
             <li class="nav-item">
               <a class="nav-link d-flex align-items-center" asp-controller="Pages" asp-action="Api">
@@ -134,6 +157,101 @@
             </li>
           </ul>
 
+          <ul class="navbar-nav ms-auto align-items-center">
+            @if (User?.Identity?.IsAuthenticated ?? false)
+            {
+              <!-- Notification Dropdown -->
+              <li class="nav-item dropdown me-3">
+                <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="fas fa-bell fs-5"></i>
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    3
+                    <span class="visually-hidden">unread notifications</span>
+                  </span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" style="min-width: 320px; max-height: 400px; overflow-y: auto;">
+                  <li class="dropdown-header d-flex justify-content-between align-items-center">
+                    <span class="fw-bold">Notifications</span>
+                    <a href="#" class="text-primary small text-decoration-none">Mark all as read</a>
+                  </li>
+                  <li><hr class="dropdown-divider" /></li>
+                  <!-- Sample notifications - replace with real data -->
+                  <li>
+                    <a class="dropdown-item py-2" href="#">
+                      <div class="d-flex">
+                        <i class="bi bi-info-circle text-primary me-2 mt-1"></i>
+                        <div class="flex-grow-1">
+                          <div class="small fw-semibold">New course material uploaded</div>
+                          <div class="text-muted" style="font-size: 0.75rem;">2 hours ago</div>
+                        </div>
+                      </div>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item py-2" href="#">
+                      <div class="d-flex">
+                        <i class="bi bi-clipboard-check text-success me-2 mt-1"></i>
+                        <div class="flex-grow-1">
+                          <div class="small fw-semibold">Assignment graded</div>
+                          <div class="text-muted" style="font-size: 0.75rem;">5 hours ago</div>
+                        </div>
+                      </div>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item py-2" href="#">
+                      <div class="d-flex">
+                        <i class="bi bi-megaphone text-warning me-2 mt-1"></i>
+                        <div class="flex-grow-1">
+                          <div class="small fw-semibold">Course announcement posted</div>
+                          <div class="text-muted" style="font-size: 0.75rem;">1 day ago</div>
+                        </div>
+                      </div>
+                    </a>
+                  </li>
+                  <li><hr class="dropdown-divider" /></li>
+                  <li>
+                    <a class="dropdown-item text-center small text-primary" href="#">
+                      View all notifications
+                    </a>
+                  </li>
+                </ul>
+              </li>
+
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                  <i class="fas fa-user-circle me-2"></i> @User.Identity!.Name
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  @if (User.IsInRole("Student"))
+                  {
+                    <li><a class="dropdown-item" asp-controller="StudentDashboard" asp-action="Index">Student Dashboard</a></li>
+                    <li><a class="dropdown-item" asp-controller="StudentCourses" asp-action="Index">Enroll in Courses</a></li>
+                  }
+                  @if (User.IsInRole("Instructor"))
+                  {
+                    <li><a class="dropdown-item" asp-controller="InstructorDashboard" asp-action="Index">Instructor Dashboard</a></li>
+                  }
+                  <li><hr class="dropdown-divider" /></li>
+                  <li>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="px-3 py-1">
+                      <button type="submit" class="btn btn-link p-0">Sign out</button>
+                    </form>
+                  </li>
+                </ul>
+              </li>
+            }
+            else
+            {
+              <li class="nav-item">
+                <a class="nav-link" asp-controller="Account" asp-action="Login"><i class="fas fa-sign-in-alt me-1"></i> Sign in</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" asp-controller="Account" asp-action="RegisterInstructor"><i class="bi bi-person-video3 me-1"></i> Apply as Instructor</a>
+              </li>
+            }
+          </ul>
+
           <!-- Theme Toggle -->
           <div class="theme-toggle ms-2" onclick="toggleTheme()">
             <i class="fas fa-moon"></i>
@@ -143,18 +261,20 @@
     </nav>
   </header>
 
-  <div class="container">
+  <div class="container-fluid px-0">
     <main role="main" class="pb-3">
       @RenderBody()
-
-      <!-- Embedded Botpress panel -->
-      <div id="webchat" style="width: 500px; height: 500px;"></div>
     </main>
   </div>
 
-  <footer class="border-top footer text-muted">
-    <div class="container">
-      &copy; @DateTime.UtcNow.Year - EDUVISION
+  <footer class="bg-dark text-white mt-auto py-4">
+    <div class="container text-center">
+      <div class="mb-2">
+        <i class="fas fa-graduation-cap me-2"></i>
+        <span class="fw-bold">EDUVISION</span>
+      </div>
+      <p class="mb-0 small">&copy; @DateTime.UtcNow.Year EduVision Learning Management System. All rights reserved.</p>
+      <p class="mb-0 small text-muted">Empowering Education Since 2024</p>
     </div>
   </footer>
 
@@ -223,5 +343,26 @@
   </script>
 
   @await RenderSectionAsync("Scripts", required: false)
+
+  <script>
+    // SignalR connection for real-time metrics (generic broadcast)
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        const connection = new signalR.HubConnectionBuilder()
+          .withUrl('/hubs/dashboard')
+          .withAutomaticReconnect()
+          .build();
+
+        connection.on('metricsUpdated', (payload) => {
+          // Dispatch a custom event so dashboards can react without tight coupling
+          document.dispatchEvent(new CustomEvent('eduv:metrics', { detail: payload }));
+        });
+
+        connection.start().catch(err => console.warn('SignalR start error', err));
+      } catch (e) {
+        console.warn('SignalR not available', e);
+      }
+    });
+  </script>
 </body>
 </html>
