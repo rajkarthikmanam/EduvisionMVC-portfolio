@@ -5,12 +5,13 @@ namespace EduvisionMvc.Models;
 public class Instructor
 {
     public int Id { get; set; }
-
     public string FirstName { get; set; } = "";
     public string LastName { get; set; } = "";
     public string Email { get; set; } = "";
+    public string? UserId { get; set; }
+    public ApplicationUser? User { get; set; }
 
-    // NEW: FK to Department (matches the ERD)
+    // Department relationship
     public int DepartmentId { get; set; }
     public Department? Department { get; set; }
 

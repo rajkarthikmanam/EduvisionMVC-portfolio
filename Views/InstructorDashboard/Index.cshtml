@@ -1,0 +1,287 @@
+@model InstructorDashboardViewModel
+@{
+    ViewData["Title"] = "Instructor Dashboard";
+}
+
+<div class="container-fluid py-4">
+    <!-- Hero Section -->
+    <div class="bg-primary text-white p-4 rounded mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-4">Welcome, @Model.Name</h1>
+                <p class="lead">@Model.Department | @Model.Email</p>
+            </div>
+            <div class="col-md-4">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center bg-light text-dark p-3 rounded">
+                            <h3>@Model.TotalCourses</h3>
+                            <p class="mb-0">Courses</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center bg-light text-dark p-3 rounded">
+                            <h3>@Model.ActiveStudents</h3>
+                            <p class="mb-0">Students</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Course Enrollments</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="enrollmentChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Grade Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="gradeChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Courses Row -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Current Courses</h5>
+                    <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addCourseModal">
+                        <i class="bi bi-plus-lg"></i> Add Course
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @foreach (var course in Model.CurrentCourses)
+                        {
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">@course.Code</h5>
+                                        <h6 class="card-subtitle mb-2 text-muted">@course.Title</h6>
+                                        <div class="small mb-2">
+                                            <i class="bi bi-calendar"></i> @course.Schedule
+                                        </div>
+                                        <div class="row text-center">
+                                            <div class="col">
+                                                <div class="fw-bold">@course.EnrollmentCount</div>
+                                                <small>Students</small>
+                                            </div>
+                                            <div class="col">
+                                                <div class="fw-bold">@course.AverageGrade.ToString("F2")</div>
+                                                <small>Avg Grade</small>
+                                            </div>
+                                            <div class="col">
+                                                <div class="fw-bold">@course.MaterialsCount</div>
+                                                <small>Materials</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer">
+                                        <div class="btn-group w-100">
+                                            <a href="#" class="btn btn-outline-primary">
+                                                <i class="bi bi-people"></i> Students
+                                            </a>
+                                            <a href="#" class="btn btn-outline-info">
+                                                <i class="bi bi-file-earmark"></i> Materials
+                                            </a>
+                                            <a href="#" class="btn btn-outline-success">
+                                                <i class="bi bi-graph-up"></i> Grades
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Past Courses and Top Students Row -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Past Courses</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Title</th>
+                                    <th>Term</th>
+                                    <th>Students</th>
+                                    <th>Avg. Grade</th>
+                                    <th>Pass Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var course in Model.PastCourses)
+                                {
+                                    <tr>
+                                        <td>@course.Code</td>
+                                        <td>@course.Title</td>
+                                        <td>@course.Term</td>
+                                        <td>@course.TotalStudents</td>
+                                        <td>@course.AverageGrade.ToString("F2")</td>
+                                        <td>@course.PassRate.ToString("F0")%</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Top Students</h5>
+                </div>
+                <div class="card-body">
+                    @foreach (var student in Model.TopStudents)
+                    {
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="flex-shrink-0">
+                                <div class="bg-light rounded-circle p-2">
+                                    <i class="bi bi-person text-primary"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-0">@student.Name</h6>
+                                <small class="text-muted">@student.Major | GPA: @student.GradeAverage.ToString("F2")</small>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity Row -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Recent Notifications</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        @foreach (var notification in Model.RecentNotifications)
+                        {
+                            <div class="list-group-item @(notification.IsRead ? "" : "list-group-item-info")">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">@notification.Message</h6>
+                                    <small>@notification.CreatedAt.ToString("MMM dd")</small>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Recent Materials</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        @foreach (var material in Model.RecentMaterials)
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">@material.Title</h6>
+                                    <small>@material.UploadedDate.ToString("MMM dd")</small>
+                                </div>
+                                <p class="mb-1">@material.Description</p>
+                                <small><a href="@material.Url" target="_blank">View Material</a></small>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Enrollment Chart
+        const enrollmentCtx = document.getElementById('enrollmentChart').getContext('2d');
+        new Chart(enrollmentCtx, {
+            type: 'bar',
+            data: {
+                labels: @Json.Serialize(Model.CourseLabels),
+                datasets: [{
+                    label: 'Students Enrolled',
+                    data: @Json.Serialize(Model.EnrollmentCounts),
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+
+        // Grade Distribution Chart
+        const gradeCtx = document.getElementById('gradeChart').getContext('2d');
+        new Chart(gradeCtx, {
+            type: 'doughnut',
+            data: {
+                labels: @Json.Serialize(Model.GradeLabels),
+                datasets: [{
+                    data: @Json.Serialize(Model.GradeDistribution),
+                    backgroundColor: [
+                        'rgba(40, 167, 69, 0.7)',   // Green for A
+                        'rgba(23, 162, 184, 0.7)',  // Cyan for B
+                        'rgba(255, 193, 7, 0.7)',   // Yellow for C
+                        'rgba(253, 126, 20, 0.7)',  // Orange for D
+                        'rgba(220, 53, 69, 0.7)'    // Red for F
+                    ],
+                    borderColor: 'rgba(255, 255, 255, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+    });
+    </script>
+}
