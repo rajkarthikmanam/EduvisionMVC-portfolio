@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using EduvisionMvc.Models;
 
 namespace EduvisionMvc.Data;
 
-public class AppDbContext(DbContextOptions<AppDbContext> opts) : DbContext(opts)
+public class AppDbContext(DbContextOptions<AppDbContext> opts) : IdentityDbContext<ApplicationUser>(opts)
 {
     public DbSet<Student> Students => Set<Student>();
     public DbSet<Course> Courses => Set<Course>();
@@ -11,6 +12,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> opts) : DbContext(opts)
     public DbSet<Department> Departments => Set<Department>();
     public DbSet<Instructor> Instructors => Set<Instructor>();
     public DbSet<CourseInstructor> CourseInstructors => Set<CourseInstructor>();
+    public DbSet<CourseMaterial> CourseMaterials => Set<CourseMaterial>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
+    public DbSet<SystemLog> SystemLogs => Set<SystemLog>();
+    public DbSet<EnrollmentHistory> EnrollmentHistories => Set<EnrollmentHistory>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
