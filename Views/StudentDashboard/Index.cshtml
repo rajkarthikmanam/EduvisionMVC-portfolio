@@ -4,12 +4,29 @@
 }
 
 <div class="container-fluid py-4">
+    @if (TempData["EnrollMessage"] != null)
+    {
+        <div class="alert alert-info">@TempData["EnrollMessage"]</div>
+    }
     <!-- Hero Section -->
     <div class="bg-primary text-white p-4 rounded mb-4">
         <div class="row">
             <div class="col-md-8">
                 <h1 class="display-4">Welcome, @Model.Name!</h1>
-                <p class="lead">Major: @Model.Major | Overall GPA: @Model.Gpa.ToString("F2")</p>
+                <p class="lead">
+                    Major: @Model.Major | Overall GPA: @Model.Gpa.ToString("F2")
+                    @if (!string.IsNullOrWhiteSpace(Model.AcademicLevel))
+                    {
+                        @: | Level: @Model.AcademicLevel
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.AdvisorName))
+                    {
+                        @: | Advisor: @Model.AdvisorName
+                    }
+                </p>
+                <a asp-controller="StudentCourses" asp-action="Index" class="btn btn-warning btn-sm mt-2">
+                    <i class="bi bi-journal-plus"></i> Enroll in Courses
+                </a>
             </div>
             <div class="col-md-4 text-end">
                 <div class="h3">Credits Progress</div>
@@ -27,9 +44,62 @@
         </div>
     </div>
 
+    <!-- Current Courses Section - Moved to Top -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0"><i class="bi bi-book-half"></i> Current Courses</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @foreach (var course in Model.CurrentCourses)
+                        {
+                            <div class="col-md-4 mb-3">
+                                <div class="course-card p-3 border rounded shadow-sm h-100">
+                                    <h6 class="fw-bold">@course.CourseCode - @course.CourseTitle</h6>
+                                    <p class="mb-1"><i class="bi bi-person"></i> @course.InstructorName</p>
+                                    <small class="text-muted"><i class="bi bi-building"></i> @course.Department</small>
+                                    <div class="mt-2">
+                                        <small class="badge bg-secondary">@course.Credits credits</small>
+                                    </div>
+                                    @{
+                                        var enrollment = Model.AllEnrollments?.FirstOrDefault(e => e.CourseId == course.CourseId && !e.Numeric_Grade.HasValue);
+                                        if (enrollment != null)
+                                        {
+                                            <div class="progress mt-3" style="height: 22px;">
+                                                <div class="progress-bar bg-success" role="progressbar" 
+                                                     style="width: @(enrollment.ProgressPercentage)%;" 
+                                                     aria-valuenow="@enrollment.ProgressPercentage" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
+                                                    @(enrollment.ProgressPercentage)%
+                                                </div>
+                                            </div>
+                                            <small class="text-muted mt-1 d-block"><i class="bi bi-clock"></i> @enrollment.TotalHoursSpent hours spent</small>
+                                            if (enrollment.Status == EnrollmentStatus.Approved && !enrollment.Numeric_Grade.HasValue)
+                                            {
+                                                <form asp-controller="StudentCourses" asp-action="Drop" method="post" class="mt-2">
+                                                    <input type="hidden" name="courseId" value="@enrollment.CourseId" />
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Drop this course?');">
+                                                        <i class="bi bi-x-circle"></i> Drop Course
+                                                    </button>
+                                                </form>
+                                            }
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Charts Row -->
     <div class="row mb-4">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
                     <h5 class="card-title">Grade Distribution</h5>
@@ -39,7 +109,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
                     <h5 class="card-title">Course Performance</h5>
@@ -49,31 +119,22 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Course Lists Row -->
-    <div class="row">
-        <!-- Current Courses -->
         <div class="col-md-4">
             <div class="card">
-                <div class="card-header bg-info text-white">
-                    <h5 class="card-title mb-0">Current Courses</h5>
+                <div class="card-header">
+                    <h5 class="card-title">Subject Competencies</h5>
                 </div>
                 <div class="card-body">
-                    @foreach (var course in Model.CurrentCourses)
-                    {
-                        <div class="course-card mb-3">
-                            <h6>@course.CourseCode - @course.CourseTitle</h6>
-                            <p class="mb-1">@course.InstructorName</p>
-                            <small class="text-muted">@course.Credits credits | @course.Department</small>
-                        </div>
-                    }
+                    <canvas id="radarChart"></canvas>
                 </div>
             </div>
         </div>
+    </div>
 
+    <!-- Course Performance Lists Row -->
+    <div class="row">
         <!-- Top Courses -->
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card">
                 <div class="card-header bg-success text-white">
                     <h5 class="card-title mb-0">Top Performance</h5>
@@ -92,7 +153,7 @@
         </div>
 
         <!-- Areas for Improvement -->
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card">
                 <div class="card-header bg-warning">
                     <h5 class="card-title mb-0">Areas for Improvement</h5>
@@ -143,6 +204,16 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Listen for real-time metrics from SignalR hub (dispatched by _Layout)
+        document.addEventListener('eduv:metrics', function(e) {
+            console.log('[Student Dashboard] Live metrics:', e.detail);
+            // Update GPA display if available
+            const gpaEl = document.querySelector('.lead');
+            if (gpaEl && e.detail.avgGpa) {
+                // Optionally update system-wide avg or leave as-is (student-specific)
+            }
+        });
+
         // Grade Distribution Chart
         const gradeCtx = document.getElementById('gradeChart').getContext('2d');
         new Chart(gradeCtx, {
@@ -204,6 +275,63 @@
                 }
             }
         });
+
+        // Radar Chart - Subject Competencies
+        @if (Model.SkillRadarData != null)
+        {
+            @:const radarData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SkillRadarData));
+            @:const radarCtx = document.getElementById('radarChart').getContext('2d');
+            @:new Chart(radarCtx, {
+            @:    type: 'radar',
+            @:    data: {
+            @:        labels: radarData.labels,
+            @:        datasets: [{
+            @:            label: radarData.datasetLabel,
+            @:            data: radarData.values,
+            @:            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            @:            borderColor: 'rgba(54, 162, 235, 1)',
+            @:            borderWidth: 2,
+            @:            pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+            @:            pointBorderColor: '#fff',
+            @:            pointHoverBackgroundColor: '#fff',
+            @:            pointHoverBorderColor: 'rgba(54, 162, 235, 1)',
+            @:            pointRadius: 5,
+            @:            pointHoverRadius: 7
+            @:        }]
+            @:    },
+            @:    options: {
+            @:        responsive: true,
+            @:        maintainAspectRatio: false,
+            @:        scales: {
+            @:            r: {
+            @:                beginAtZero: true,
+            @:                max: 4.0,
+            @:                ticks: {
+            @:                    stepSize: 0.5
+            @:                },
+            @:                pointLabels: {
+            @:                    font: {
+            @:                        size: 12,
+            @:                        weight: 'bold'
+            @:                    }
+            @:                }
+            @:            }
+            @:        },
+            @:        plugins: {
+            @:            legend: {
+            @:                position: 'top'
+            @:            },
+            @:            tooltip: {
+            @:                callbacks: {
+            @:                    label: function(context) {
+            @:                        return context.dataset.label + ': ' + context.parsed.r.toFixed(2) + ' GPA';
+            @:                    }
+            @:                }
+            @:            }
+            @:        }
+            @:    }
+            @:});
+        }
     });
     </script>
 }

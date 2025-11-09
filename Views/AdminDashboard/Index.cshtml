@@ -1,0 +1,206 @@
+@model EduvisionMvc.ViewModels.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 d-flex align-items-center"><i class="fas fa-gauge-high me-2"></i> Admin Dashboard</h1>
+    <small class="text-muted" id="liveStamp">live</small>
+  </div>
+
+  <div class="row g-3 mb-4" id="live-kpis-1">
+    <div class="col-md-3"><div class="card p-3"><div class="text-muted">Users</div><div class="h3">@Model.TotalUsers</div></div></div>
+    <div class="col-md-3"><div class="card p-3"><div class="text-muted">Students</div><div class="h3">@Model.TotalStudents</div></div></div>
+    <div class="col-md-3"><div class="card p-3"><div class="text-muted">Instructors</div><div class="h3">@Model.TotalInstructors</div></div></div>
+    <div class="col-md-3"><div class="card p-3"><div class="text-muted">Courses</div><div class="h3">@Model.TotalCourses</div></div></div>
+  </div>
+
+  <div class="row g-3 mb-4" id="live-kpis-2">
+    <div class="col-md-4"><div class="card p-3"><div class="text-muted">Active Enrollments</div><div class="h4">@Model.ActiveEnrollments</div></div></div>
+    <div class="col-md-4"><div class="card p-3"><div class="text-muted">Average GPA</div><div class="h4">@Model.AverageGpa</div></div></div>
+    <div class="col-md-4"><div class="card p-3"><div class="text-muted">Pending Approvals</div><div class="h4">@Model.PendingApprovals</div></div></div>
+  </div>
+
+  <div class="row g-3 mb-4" id="live-kpis-3">
+    <div class="col-md-4"><div class="card p-3"><div class="text-muted">Materials</div><div class="h4">@Model.MaterialsCount</div></div></div>
+    <div class="col-md-4"><div class="card p-3"><div class="text-muted">Discussions</div><div class="h4">@Model.DiscussionsCount</div></div></div>
+    <div class="col-md-4"><div class="card p-3"><div class="text-muted">Assignments</div><div class="h4">@Model.AssignmentsCount</div></div></div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">Role Distribution</div>
+        <div class="card-body">
+          <ul class="list-group">
+            @foreach (var rc in Model.RoleDistribution)
+            {
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>@rc.Role</span>
+                <span class="badge bg-primary rounded-pill">@rc.Count</span>
+              </li>
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">Recent Notifications</div>
+        <div class="card-body">
+          <ul class="list-group">
+            @foreach (var n in Model.RecentNotifications)
+            {
+              <li class="list-group-item">
+                <div class="d-flex justify-content-between">
+                  <strong>@n.UserEmail</strong>
+                  <small class="text-muted">@n.CreatedAt.ToString("g")</small>
+                </div>
+                <div>@n.Message</div>
+              </li>
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-3">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">Capacity Alerts (>= 80%)</div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead><tr><th>Code</th><th>Title</th><th>Capacity</th><th>Current</th><th>Utilization</th></tr></thead>
+              <tbody>
+              @foreach (var c in Model.CapacityAlerts)
+              {
+                var util = c.Capacity == 0 ? 0 : (int)(c.Current * 100.0 / c.Capacity);
+                <tr>
+                  <td>@c.Code</td>
+                  <td>@c.Title</td>
+                  <td>@c.Capacity</td>
+                  <td>@c.Current</td>
+                  <td>@util%</td>
+                </tr>
+              }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">Course Capacity Analysis</div>
+        <div class="card-body">
+          <canvas id="scatterChart" height="300"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Scripts {
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>
+    const scatterData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CourseCapacityData.Select(d => new {
+        x = d.X,
+        y = d.Y,
+        label = d.CourseCode,
+        utilization = d.UtilizationRate
+    })));
+
+  const ctx = document.getElementById('scatterChart').getContext('2d');
+  const scatterChart = new Chart(ctx, {
+      type: 'scatter',
+      data: {
+        datasets: [{
+          label: 'Courses (Capacity vs Enrollment)',
+          data: scatterData.map(d => ({ x: d.x, y: d.y })),
+          backgroundColor: scatterData.map(d => {
+            // Color code by utilization: green (<50%), yellow (50-80%), red (>80%)
+            if (d.utilization < 50) return 'rgba(75, 192, 192, 0.6)';
+            if (d.utilization < 80) return 'rgba(255, 206, 86, 0.6)';
+            return 'rgba(255, 99, 132, 0.6)';
+          }),
+          borderColor: scatterData.map(d => {
+            if (d.utilization < 50) return 'rgba(75, 192, 192, 1)';
+            if (d.utilization < 80) return 'rgba(255, 206, 86, 1)';
+            return 'rgba(255, 99, 132, 1)';
+          }),
+          borderWidth: 2,
+          pointRadius: 8,
+          pointHoverRadius: 10
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const point = scatterData[context.dataIndex];
+                return `${point.label}: ${point.y}/${point.x} (${point.utilization}%)`;
+              }
+            }
+          },
+          legend: {
+            display: true,
+            position: 'top'
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Course Capacity'
+            },
+            beginAtZero: true
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Current Enrollment'
+            },
+            beginAtZero: true
+          }
+        }
+      }
+    });
+    function applyRealTime(payload){
+      if(!payload || !payload.totals) return;
+      document.getElementById('liveStamp').textContent = new Date(payload.ts).toLocaleTimeString();
+      // Update KPI numbers if they exist
+      const map = {
+        'Users': payload.totals.users,
+        'Students': payload.totals.students,
+        'Instructors': payload.totals.instructors,
+        'Courses': payload.totals.courses
+      };
+      for (const [k,v] of Object.entries(map)){
+        const el = [...document.querySelectorAll('#live-kpis-1 .card')].find(c=>c.innerText.includes(k));
+        if (el) el.querySelector('.h3')?.replaceChildren(document.createTextNode(v));
+      }
+      // Enrollment / completion (second row)
+      const active = payload.totals.enrollments - payload.totals.completed;
+      const second = {
+        'Active Enrollments': active,
+        'Average GPA': (payload.totals.avgGpa||0).toFixed(2)
+      };
+      for (const [k,v] of Object.entries(second)){
+        const el = [...document.querySelectorAll('#live-kpis-2 .card')].find(c=>c.innerText.includes(k));
+        if (el) el.querySelector('.h4')?.replaceChildren(document.createTextNode(v));
+      }
+      // Rebuild scatter if departments changed (approximation)
+      if (payload.departments){
+        // Optionally we could request fresh capacity data via API for accuracy later
+      }
+    }
+    document.addEventListener('eduv:metrics', e=>applyRealTime(e.detail));
+  </script>
+}
+

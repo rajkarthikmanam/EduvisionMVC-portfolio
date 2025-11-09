@@ -30,36 +30,12 @@
         </div>
     </div>
 
-    <!-- Charts Row -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">Course Enrollments</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="enrollmentChart"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">Grade Distribution</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="gradeChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Current Courses Row -->
+    <!-- Current Courses Row - Moved to Top -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
                 <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Current Courses</h5>
+                    <h5 class="card-title mb-0"><i class="bi bi-book-half"></i> Current Courses</h5>
                     <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addCourseModal">
                         <i class="bi bi-plus-lg"></i> Add Course
                     </button>
@@ -69,7 +45,7 @@
                         @foreach (var course in Model.CurrentCourses)
                         {
                             <div class="col-md-6 col-lg-4 mb-3">
-                                <div class="card h-100">
+                                <div class="card h-100 shadow-sm">
                                     <div class="card-body">
                                         <h5 class="card-title">@course.Code</h5>
                                         <h6 class="card-subtitle mb-2 text-muted">@course.Title</h6>
@@ -93,13 +69,13 @@
                                     </div>
                                     <div class="card-footer">
                                         <div class="btn-group w-100">
-                                            <a href="#" class="btn btn-outline-primary">
+                                            <a asp-controller="InstructorCourses" asp-action="Details" asp-route-id="@course.Code" class="btn btn-outline-primary btn-sm">
                                                 <i class="bi bi-people"></i> Students
                                             </a>
-                                            <a href="#" class="btn btn-outline-info">
+                                            <a href="#" class="btn btn-outline-info btn-sm">
                                                 <i class="bi bi-file-earmark"></i> Materials
                                             </a>
-                                            <a href="#" class="btn btn-outline-success">
+                                            <a href="#" class="btn btn-outline-success btn-sm">
                                                 <i class="bi bi-graph-up"></i> Grades
                                             </a>
                                         </div>
@@ -108,6 +84,75 @@
                             </div>
                         }
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-lightning-fill text-warning"></i> Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <a asp-controller="InstructorMaterials" asp-action="Index" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-file-earmark-text"></i> Manage Materials
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-controller="InstructorAssignments" asp-action="Index" class="btn btn-outline-success w-100">
+                                <i class="bi bi-clipboard-check"></i> Manage Assignments
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-controller="InstructorAnnouncements" asp-action="Index" class="btn btn-outline-info w-100">
+                                <i class="bi bi-megaphone"></i> Manage Announcements
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-controller="InstructorCourses" asp-action="Index" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-book"></i> My Courses
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Course Enrollments</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="enrollmentChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Grade Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="gradeChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Course Performance Comparison</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="polarChart"></canvas>
                 </div>
             </div>
         </div>
@@ -226,10 +271,30 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+    let enrollmentChart, gradeChart, polarChart;
+    
     document.addEventListener('DOMContentLoaded', function () {
+        // Listen for real-time metrics from SignalR hub (dispatched by _Layout)
+        document.addEventListener('eduv:metrics', function(e) {
+            console.log('[Instructor Dashboard] Live metrics:', e.detail);
+            const metrics = e.detail;
+            
+            // Update student count display
+            const activeStudentsEl = document.querySelector('.bg-light.text-dark.p-3.rounded h3:contains("@Model.ActiveStudents")');
+            if (activeStudentsEl && metrics.totalStudents) {
+                activeStudentsEl.textContent = metrics.totalStudents;
+            }
+            
+            // Update enrollment chart if available
+            if (enrollmentChart && metrics.departmentCounts) {
+                // Could refresh with API call or use broadcast data
+                console.log('Enrollment chart could refresh with:', metrics);
+            }
+        });
+
         // Enrollment Chart
         const enrollmentCtx = document.getElementById('enrollmentChart').getContext('2d');
-        new Chart(enrollmentCtx, {
+        enrollmentChart = new Chart(enrollmentCtx, {
             type: 'bar',
             data: {
                 labels: @Json.Serialize(Model.CourseLabels),
@@ -256,7 +321,7 @@
 
         // Grade Distribution Chart
         const gradeCtx = document.getElementById('gradeChart').getContext('2d');
-        new Chart(gradeCtx, {
+        gradeChart = new Chart(gradeCtx, {
             type: 'doughnut',
             data: {
                 labels: @Json.Serialize(Model.GradeLabels),
@@ -278,6 +343,49 @@
                 plugins: {
                     legend: {
                         position: 'right'
+                    }
+                }
+            }
+        });
+
+        // Polar Area Chart - Course Performance Comparison
+        const polarData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CourseGradeComparison));
+        const polarCtx = document.getElementById('polarChart').getContext('2d');
+        polarChart = new Chart(polarCtx, {
+            type: 'polarArea',
+            data: {
+                labels: polarData.map(d => d.courseCode),
+                datasets: [{
+                    label: 'Average Grade (GPA)',
+                    data: polarData.map(d => d.averageGrade),
+                    backgroundColor: polarData.map(d => d.colorHex + '99'),
+                    borderColor: polarData.map(d => d.colorHex),
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const point = polarData[context.dataIndex];
+                                return `: GPA  ( students)`;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 4.0,
+                        ticks: {
+                            stepSize: 0.5
+                        }
                     }
                 }
             }
