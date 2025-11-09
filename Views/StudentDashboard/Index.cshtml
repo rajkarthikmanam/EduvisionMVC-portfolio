@@ -1,0 +1,209 @@
+@model StudentDashboardViewModel
+@{
+    ViewData["Title"] = "Student Dashboard";
+}
+
+<div class="container-fluid py-4">
+    <!-- Hero Section -->
+    <div class="bg-primary text-white p-4 rounded mb-4">
+        <div class="row">
+            <div class="col-md-8">
+                <h1 class="display-4">Welcome, @Model.Name!</h1>
+                <p class="lead">Major: @Model.Major | Overall GPA: @Model.Gpa.ToString("F2")</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="h3">Credits Progress</div>
+                <div class="progress" style="height: 25px;">
+                    <div class="progress-bar" role="progressbar" 
+                         style="width: @Model.CompletionPercentage%;" 
+                         aria-valuenow="@Model.CompletionPercentage" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
+                        @Model.TotalCredits / @Model.RequiredCredits Credits
+                    </div>
+                </div>
+                <small class="text-light">@Model.CreditsInProgress credits in progress</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Grade Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="gradeChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Course Performance</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Lists Row -->
+    <div class="row">
+        <!-- Current Courses -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">Current Courses</h5>
+                </div>
+                <div class="card-body">
+                    @foreach (var course in Model.CurrentCourses)
+                    {
+                        <div class="course-card mb-3">
+                            <h6>@course.CourseCode - @course.CourseTitle</h6>
+                            <p class="mb-1">@course.InstructorName</p>
+                            <small class="text-muted">@course.Credits credits | @course.Department</small>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Courses -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">Top Performance</h5>
+                </div>
+                <div class="card-body">
+                    @foreach (var course in Model.TopCourses)
+                    {
+                        <div class="course-card mb-3">
+                            <h6>@course.CourseCode - @course.CourseTitle</h6>
+                            <p class="mb-1">Grade: @course.Grade?.ToString("F2") | @course.Term</p>
+                            <small class="text-muted">@course.Credits credits | @course.Department</small>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Areas for Improvement -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h5 class="card-title mb-0">Areas for Improvement</h5>
+                </div>
+                <div class="card-body">
+                    @foreach (var course in Model.WeakCourses)
+                    {
+                        <div class="course-card mb-3">
+                            <h6>@course.CourseCode - @course.CourseTitle</h6>
+                            <p class="mb-1">Grade: @course.Grade?.ToString("F2") | @course.Term</p>
+                            <small class="text-muted">@course.Credits credits | @course.Department</small>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Section -->
+    @if (Model.RecentNotifications.Any())
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Recent Notifications</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            @foreach (var notification in Model.RecentNotifications)
+                            {
+                                <div class="list-group-item @(notification.IsRead ? "" : "list-group-item-info")">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">@notification.Message</h6>
+                                        <small>@notification.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Grade Distribution Chart
+        const gradeCtx = document.getElementById('gradeChart').getContext('2d');
+        new Chart(gradeCtx, {
+            type: 'bar',
+            data: {
+                labels: @Json.Serialize(Model.GradeLabels),
+                datasets: [{
+                    label: 'Number of Courses',
+                    data: @Json.Serialize(Model.GradeData),
+                    backgroundColor: [
+                        'rgba(40, 167, 69, 0.7)',   // Green for A
+                        'rgba(23, 162, 184, 0.7)',  // Cyan for B
+                        'rgba(255, 193, 7, 0.7)',   // Yellow for C
+                        'rgba(253, 126, 20, 0.7)',  // Orange for D
+                        'rgba(220, 53, 69, 0.7)'    // Red for F
+                    ],
+                    borderColor: 'rgba(200, 200, 200, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+
+        // Course Performance Chart
+        const perfCtx = document.getElementById('performanceChart').getContext('2d');
+        new Chart(perfCtx, {
+            type: 'line',
+            data: {
+                labels: @Json.Serialize(Model.CourseLabels),
+                datasets: [{
+                    label: 'Grade',
+                    data: @Json.Serialize(Model.CoursePerformance),
+                    borderColor: 'rgba(0, 123, 255, 1)',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 4.0,
+                        ticks: {
+                            stepSize: 0.5
+                        }
+                    }
+                }
+            }
+        });
+    });
+    </script>
+}
