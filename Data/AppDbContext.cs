@@ -13,21 +13,61 @@ public class AppDbContext(DbContextOptions<AppDbContext> opts) : IdentityDbConte
     public DbSet<Instructor> Instructors => Set<Instructor>();
     public DbSet<CourseInstructor> CourseInstructors => Set<CourseInstructor>();
     public DbSet<CourseMaterial> CourseMaterials => Set<CourseMaterial>();
-    public DbSet<Notification> Notifications => Set<Notification>();
-    public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
-    public DbSet<SystemLog> SystemLogs => Set<SystemLog>();
-    public DbSet<EnrollmentHistory> EnrollmentHistories => Set<EnrollmentHistory>();
+        public DbSet<Notification> Notifications => Set<Notification>();
+        public DbSet<EnrollmentHistory> EnrollmentHistory => Set<EnrollmentHistory>();
+        public DbSet<Assignment> Assignments => Set<Assignment>();
+        public DbSet<AssignmentSubmission> Submissions => Set<AssignmentSubmission>();
+        public DbSet<Discussion> Discussions => Set<Discussion>();
+        public DbSet<DiscussionPost> DiscussionPosts => Set<DiscussionPost>();
+        public DbSet<CourseAnnouncement> Announcements => Set<CourseAnnouncement>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
 
-        // Precision for GPA (3,2) => e.g., 3.75, 4.00
+        // Configure Identity tables
+        b.Entity<ApplicationUser>()
+            .Property(u => u.CreatedAt)
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+        // Configure Student
         b.Entity<Student>()
             .Property(x => x.Gpa)
             .HasPrecision(3, 2);
 
-        // Enrollment relationships
+        b.Entity<Student>()
+            .HasOne(s => s.User)
+            .WithOne(u => u.Student)
+            .HasForeignKey<ApplicationUser>(u => u.StudentId);
+
+        // Configure Instructor
+        b.Entity<Instructor>()
+            .HasOne(i => i.User)
+            .WithOne(u => u.Instructor)
+            .HasForeignKey<ApplicationUser>(u => u.InstructorId);
+
+        // Link Student to Department (optional FK)
+        b.Entity<Student>()
+            .HasOne(s => s.Department)
+            .WithMany(d => d.Students)
+            .HasForeignKey(s => s.DepartmentId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Student advisor (optional link to Instructor)
+        b.Entity<Student>()
+            .HasOne(s => s.AdvisorInstructor)
+            .WithMany()
+            .HasForeignKey(s => s.AdvisorInstructorId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Department chair (optional)
+        b.Entity<Department>()
+            .HasOne(d => d.Chair)
+            .WithMany()
+            .HasForeignKey(d => d.ChairId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Configure Enrollment relationships
         b.Entity<Enrollment>()
             .HasOne(e => e.Student)
             .WithMany(s => s.Enrollments)
@@ -40,7 +80,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> opts) : IdentityDbConte
             .HasForeignKey(e => e.CourseId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Many-to-many Course <-> Instructor via join entity
+        // Unique constraint: One student per course per term
+        b.Entity<Enrollment>()
+            .HasIndex(e => new { e.StudentId, e.CourseId, e.Term })
+            .IsUnique();
+
+        // Configure Course relationships
         b.Entity<CourseInstructor>()
             .HasKey(ci => new { ci.CourseId, ci.InstructorId });
 
@@ -54,40 +99,82 @@ public class AppDbContext(DbContextOptions<AppDbContext> opts) : IdentityDbConte
             .WithMany(i => i.CourseInstructors)
             .HasForeignKey(ci => ci.InstructorId);
 
-        // Data integrity: Course code must be unique inside a Department
+        // Course code must be unique within a department
         b.Entity<Course>()
             .HasIndex(c => new { c.Code, c.DepartmentId })
             .IsUnique();
 
-        // ---- Seed data ----
-        b.Entity<Department>().HasData(
-            new Department { Id = 1, Name = "CS"   },
-            new Department { Id = 2, Name = "Math" }
-        );
+        // Configure EnrollmentHistory tracking
+        b.Entity<EnrollmentHistory>()
+            .HasOne(h => h.Enrollment)
+            .WithMany(e => e.History)
+            .HasForeignKey(h => h.EnrollmentId);
 
-       b.Entity<Instructor>().HasData(
-  new Instructor { Id = 1, FirstName = "Dr.", LastName = "Gray", Email = "gray@univ.edu", DepartmentId = 1 },
-  new Instructor { Id = 2, FirstName = "Dr.", LastName = "Hall", Email = "hall@univ.edu", DepartmentId = 2 }
-);
+        b.Entity<EnrollmentHistory>()
+            .HasOne(h => h.UpdatedBy)
+            .WithMany(u => u.EnrollmentChanges)
+            .HasForeignKey(h => h.UpdatedById)
+            .OnDelete(DeleteBehavior.Restrict);
 
-        b.Entity<Course>().HasData(
-            new Course { Id = 1, Code = "CS101",  Title = "Intro CS",   Credits = 3, DepartmentId = 1 },
-            new Course { Id = 2, Code = "MTH201", Title = "Calculus I", Credits = 4, DepartmentId = 2 }
-        );
+        // Configure Course Materials
+        b.Entity<CourseMaterial>()
+            .HasOne(m => m.Course)
+            .WithMany(c => c.Materials)
+            .HasForeignKey(m => m.CourseId);
 
-        b.Entity<Student>().HasData(
-            new Student { Id = 1, Name = "Ava",  Major = "CS",   Age = 20, Gpa = 3.70m },
-            new Student { Id = 2, Name = "Liam", Major = "Math", Age = 21, Gpa = 3.50m }
-        );
+        b.Entity<CourseMaterial>()
+            .HasOne(m => m.UploadedBy)
+            .WithMany(u => u.UploadedMaterials)
+            .HasForeignKey(m => m.UploadedById)
+            .OnDelete(DeleteBehavior.Restrict);
 
-        b.Entity<Enrollment>().HasData(
-            new Enrollment { Id = 1, StudentId = 1, CourseId = 1, Term = "Fall 2025", Numeric_Grade = 3.8m },
-            new Enrollment { Id = 2, StudentId = 2, CourseId = 2, Term = "Fall 2025", Numeric_Grade = 3.6m }
-        );
-        b.Entity<CourseInstructor>().HasData(
-    new CourseInstructor { CourseId = 1, InstructorId = 1 },
-    new CourseInstructor { CourseId = 2, InstructorId = 2 }
-);
+        // Configure Notifications
+        b.Entity<Notification>()
+            .HasOne(n => n.User)
+            .WithMany(u => u.Notifications)
+            .HasForeignKey(n => n.UserId);
+
+            // Configure Assignment relationships
+            b.Entity<Assignment>()
+                .HasOne(a => a.Course)
+                .WithMany(c => c.Assignments)
+                .HasForeignKey(a => a.CourseId);
+
+            b.Entity<AssignmentSubmission>()
+                .HasOne(s => s.Assignment)
+                .WithMany(a => a.Submissions)
+                .HasForeignKey(s => s.AssignmentId);
+
+            b.Entity<AssignmentSubmission>()
+                .HasOne(s => s.Student)
+                .WithMany(s => s.Submissions)
+                .HasForeignKey(s => s.StudentId);
+
+            // Configure Discussion relationships
+            b.Entity<Discussion>()
+                .HasOne(d => d.Course)
+                .WithMany(c => c.Discussions)
+                .HasForeignKey(d => d.CourseId);
+
+            b.Entity<DiscussionPost>()
+                .HasOne(p => p.Discussion)
+                .WithMany(d => d.Posts)
+                .HasForeignKey(p => p.DiscussionId);
+
+            b.Entity<DiscussionPost>()
+                .HasOne(p => p.Author)
+                .WithMany(u => u.DiscussionPosts)
+                .HasForeignKey(p => p.AuthorId);
+
+            b.Entity<CourseAnnouncement>()
+                .HasOne(a => a.Course)
+                .WithMany(c => c.Announcements)
+                .HasForeignKey(a => a.CourseId);
+
+            b.Entity<CourseAnnouncement>()
+                .HasOne(a => a.Author)
+                .WithMany(u => u.CourseAnnouncements)
+                .HasForeignKey(a => a.AuthorId);
 
     }
 }

@@ -7,9 +7,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using EduvisionMvc.Data;
 using EduvisionMvc.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EduvisionMvc.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class StudentsController : Controller
     {
         private readonly AppDbContext _context;

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using EduvisionMvc.Models;
 
 namespace EduvisionMvc.Controllers;
@@ -13,7 +14,8 @@ public class HomeController : Controller
         _logger = logger;
     }
 
-    // Home
+    // Home - Allow anonymous access
+    [AllowAnonymous]
     public IActionResult Index() => View();
 
     // NEW: Visualization page

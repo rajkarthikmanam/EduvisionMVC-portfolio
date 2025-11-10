@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using EduvisionMvc.Data;
 using EduvisionMvc.Models;
 using EduvisionMvc.ViewModels;
+using EduvisionMvc.Utilities;
 
 namespace EduvisionMvc.Controllers;
 
@@ -22,34 +23,36 @@ public class InstructorDashboardController : Controller
 
     public async Task<IActionResult> Index()
     {
-        var user = await _userManager.GetUserAsync(User);
-        if (user == null) return Challenge();
+    var user = await _userManager.GetUserAsync(User);
+    if (user == null) return Challenge();
 
         var instructor = await _context.Instructors
             .Include(i => i.Department)
             .Include(i => i.CourseInstructors)
                 .ThenInclude(ci => ci.Course)
-                    .ThenInclude(c => c.Enrollments)
+                    .ThenInclude(c => c!.Enrollments)
                         .ThenInclude(e => e.Student)
-            .FirstOrDefaultAsync(i => i.UserId == user.Id);
+            .FirstOrDefaultAsync(i => i.UserId == user!.Id);
 
         if (instructor == null) return NotFound();
 
-        var currentTerm = "Fall 2025"; // TODO: Make this dynamic
+    var currentTerm = AcademicTermHelper.GetCurrentTerm(DateTime.UtcNow);
         var currentCourses = instructor.CourseInstructors
-            .Select(ci => ci.Course)
-            .Where(c => c.Enrollments.Any(e => e.Term == currentTerm));
+            .Select(ci => ci.Course!)
+            .Where(c => c.Enrollments.Any(e => e.Term == currentTerm))
+            .ToList();
 
         var pastCourses = instructor.CourseInstructors
-            .Select(ci => ci.Course)
-            .Where(c => c.Enrollments.Any(e => e.Term != currentTerm));
+            .Select(ci => ci.Course!)
+            .Where(c => c.Enrollments.Any(e => e.Term != currentTerm))
+            .ToList();
 
         var model = new InstructorDashboardViewModel
         {
-            Name = $"Dr. {instructor.LastName}",
-            Department = instructor.Department.Name,
-            Email = instructor.Email,
-            TotalCourses = instructor.CourseInstructors.Count,
+            Name = $"Dr. {instructor!.LastName}",
+            Department = instructor!.Department?.Name ?? "",
+            Email = instructor!.Email,
+            TotalCourses = instructor!.CourseInstructors.Count,
             ActiveStudents = currentCourses
                 .SelectMany(c => c.Enrollments)
                 .Select(e => e.StudentId)
@@ -68,6 +71,19 @@ public class InstructorDashboardController : Controller
                 .SelectMany(c => c.Enrollments)
                 .Where(e => e.Term == currentTerm && e.Numeric_Grade.HasValue)
                 .Select(e => e.Numeric_Grade!.Value)),
+
+            // Polar Area Chart: Course grade comparison
+            CourseGradeComparison = currentCourses.Select((c, index) => new PolarChartData
+            {
+                CourseCode = c.Code,
+                AverageGrade = c.Enrollments
+                    .Where(e => e.Term == currentTerm && e.Numeric_Grade.HasValue)
+                    .Select(e => e.Numeric_Grade!.Value)
+                    .DefaultIfEmpty()
+                    .Average(),
+                StudentCount = c.Enrollments.Count(e => e.Term == currentTerm),
+                ColorHex = GetColorForIndex(index)
+            }).ToList(),
 
             // Current courses with statistics
             CurrentCourses = currentCourses.Select(c => new CourseStatistics
@@ -93,7 +109,7 @@ public class InstructorDashboardController : Controller
                 CourseId = c.Id,
                 Code = c.Code,
                 Title = c.Title,
-                Term = c.Enrollments.First().Term,
+                Term = c.Enrollments.FirstOrDefault()?.Term ?? currentTerm,
                 TotalStudents = c.Enrollments.Count,
                 AverageGrade = c.Enrollments
                     .Where(e => e.Numeric_Grade.HasValue)
@@ -109,17 +125,18 @@ public class InstructorDashboardController : Controller
                 .SelectMany(c => c.Enrollments
                     .Where(e => e.Term == currentTerm)
                     .Select(e => e.Student))
-                .GroupBy(s => s.Id)
+                .Where(s => s != null)
+                .GroupBy(s => s!.Id)
                 .Select(g => new StudentPerformance
                 {
                     StudentId = g.Key,
-                    Name = g.First().Name,
-                    Major = g.First().Major,
-                    GradeAverage = g.First().Gpa,
-                    CoursesCompleted = g.First().Enrollments.Count(e => e.Numeric_Grade.HasValue),
-                    CompletedCourses = g.First().Enrollments
+                    Name = g.First()!.Name,
+                    Major = g.First()!.Major,
+                    GradeAverage = g.First()!.Gpa,
+                    CoursesCompleted = g.First()!.Enrollments.Count(e => e.Numeric_Grade.HasValue),
+                    CompletedCourses = g.First()!.Enrollments
                         .Where(e => e.Numeric_Grade.HasValue)
-                        .Select(e => e.Course.Code)
+                        .Select(e => e.Course!.Code)
                         .ToList()
                 })
                 .OrderByDescending(s => s.GradeAverage)
@@ -158,5 +175,14 @@ public class InstructorDashboardController : Controller
         }
 
         return distribution.ToList();
+    }
+
+    private static string GetColorForIndex(int index)
+    {
+        var colors = new[] {
+            "#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF",
+            "#FF9F40", "#FF6384", "#C9CBCF", "#4BC0C0", "#FF6384"
+        };
+        return colors[index % colors.Length];
     }
 }

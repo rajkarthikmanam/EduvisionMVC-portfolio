@@ -17,24 +17,25 @@ namespace EduvisionMvc.Controllers
 
         // ✅ GET: /api/chartsapi/gradesbycourse
         [HttpGet("gradesByCourse")]
-public async Task<IActionResult> GetGradesByCourse()
-{
-    var q = await Task.Run(() =>
-        _db.Enrollments
-            .Include(e => e.Course)
-            .AsEnumerable()  // forces client-side evaluation
-            .GroupBy(e => e.Course?.Code ?? "Unknown")
-            .Select(g => new
-            {
-                code = g.Key,
-                avg = Math.Round(g.Average(x => (double)x.Numeric_Grade), 2)
-            })
-            .OrderBy(x => x.code)
-            .ToList()   // 👈 regular ToList (NOT ToListAsync)
-    );
+        public async Task<IActionResult> GetGradesByCourse()
+        {
+            var q = await Task.Run(() =>
+                _db.Enrollments
+                    .Include(e => e.Course)
+                    .Where(e => e.Numeric_Grade != null)  // Only completed courses with grades
+                    .AsEnumerable()
+                    .GroupBy(e => e.Course?.Code ?? "Unknown")
+                    .Select(g => new
+                    {
+                        code = g.Key,
+                        avg = Math.Round(g.Average(x => (double)x.Numeric_Grade!.Value), 2)
+                    })
+                    .OrderBy(x => x.code)
+                    .ToList()
+            );
 
-    return Ok(q);
-}
+            return Ok(q);
+        }
 
         }
     }

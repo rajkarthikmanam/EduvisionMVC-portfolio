@@ -3,9 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using EduvisionMvc.Data;
 using EduvisionMvc.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EduvisionMvc.Controllers;
 
+[Authorize(Roles = "Admin")]
 public class EnrollmentsController : Controller
 {
     private readonly AppDbContext _context;
@@ -17,11 +19,11 @@ public class EnrollmentsController : Controller
         var q = _context.Enrollments
             .Include(e => e.Student)
             .Include(e => e.Course)
-                .ThenInclude(c => c.CourseInstructors)
+                .ThenInclude(c => c!.CourseInstructors)
                     .ThenInclude(ci => ci.Instructor);
 
-        var data = await q.OrderBy(e => e.Student.Name)
-                          .ThenBy(e => e.Course.Title)
+    var data = await q.OrderBy(e => e.Student == null ? string.Empty : e.Student!.Name)
+              .ThenBy(e => e.Course == null ? string.Empty : e.Course!.Title)
                           .ToListAsync();
         return View(data);
     }
@@ -32,7 +34,7 @@ public class EnrollmentsController : Controller
         var e = await _context.Enrollments
             .Include(x => x.Student)
             .Include(x => x.Course)
-                .ThenInclude(c => c.CourseInstructors)
+                .ThenInclude(c => c!.CourseInstructors)
                     .ThenInclude(ci => ci.Instructor)
             .FirstOrDefaultAsync(x => x.Id == id);
 

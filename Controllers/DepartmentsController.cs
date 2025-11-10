@@ -7,9 +7,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using EduvisionMvc.Data;
 using EduvisionMvc.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EduvisionMvc.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class DepartmentsController : Controller
     {
         private readonly AppDbContext _context;
@@ -46,6 +48,7 @@ namespace EduvisionMvc.Controllers
         // GET: Departments/Create
         public IActionResult Create()
         {
+            ViewBag.Instructors = new SelectList(_context.Instructors.OrderBy(i => i.LastName), "Id", "LastName");
             return View();
         }
 
@@ -54,7 +57,7 @@ namespace EduvisionMvc.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Code,Name")] Department department)
+        public async Task<IActionResult> Create([Bind("Id,Code,Name,Description,OfficeLocation,Phone,Email,Website,ChairId")] Department department)
         {
             if (ModelState.IsValid)
             {
@@ -62,6 +65,7 @@ namespace EduvisionMvc.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+            ViewBag.Instructors = new SelectList(_context.Instructors.OrderBy(i => i.LastName), "Id", "LastName", department.ChairId);
             return View(department);
         }
 
@@ -78,6 +82,7 @@ namespace EduvisionMvc.Controllers
             {
                 return NotFound();
             }
+            ViewBag.Instructors = new SelectList(_context.Instructors.OrderBy(i => i.LastName), "Id", "LastName", department.ChairId);
             return View(department);
         }
 
@@ -86,7 +91,7 @@ namespace EduvisionMvc.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Code,Name")] Department department)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Code,Name,Description,OfficeLocation,Phone,Email,Website,ChairId")] Department department)
         {
             if (id != department.Id)
             {
@@ -113,6 +118,7 @@ namespace EduvisionMvc.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+            ViewBag.Instructors = new SelectList(_context.Instructors.OrderBy(i => i.LastName), "Id", "LastName", department.ChairId);
             return View(department);
         }
 

@@ -5,9 +5,11 @@ using Microsoft.EntityFrameworkCore;
 using EduvisionMvc.Data;
 using EduvisionMvc.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EduvisionMvc.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class CoursesController : Controller
     {
         private readonly AppDbContext _context;
@@ -57,7 +59,7 @@ namespace EduvisionMvc.Controllers
         // POST: Courses/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Code,Title,Credits,DepartmentId")] Course course)
+    public async Task<IActionResult> Create([Bind("Id,Code,Title,Description,Credits,Capacity,RequiresApproval,Level,DeliveryMode,Prerequisites,DepartmentId,Schedule,StartDate,EndDate,Location")] Course course)
         {
             if (ModelState.IsValid)
             {
@@ -84,7 +86,7 @@ namespace EduvisionMvc.Controllers
         // POST: Courses/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Code,Title,Credits,DepartmentId")] Course course)
+    public async Task<IActionResult> Edit(int id, [Bind("Id,Code,Title,Description,Credits,Capacity,RequiresApproval,Level,DeliveryMode,Prerequisites,DepartmentId,Schedule,StartDate,EndDate,Location")] Course course)
         {
             if (id != course.Id) return NotFound();
 
