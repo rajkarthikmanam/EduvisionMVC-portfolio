@@ -149,7 +149,6 @@ C:\Users\manam\Downloads\EduVisionMVC-Portfolio\obj\Debug\net9.0\scopedcss\proje
 C:\Users\manam\Downloads\EduVisionMVC-Portfolio\obj\Debug\net9.0\compressed\qb338ei5cy-8ckla972oj.gz
 C:\Users\manam\Downloads\EduVisionMVC-Portfolio\obj\Debug\net9.0\compressed\ptf7xyyxrm-9brb2z20yf.gz
 C:\Users\manam\Downloads\EduVisionMVC-Portfolio\obj\Debug\net9.0\compressed\by4kxlw1xz-pmvnjvz1mn.gz
-C:\Users\manam\Downloads\EduVisionMVC-Portfolio\obj\Debug\net9.0\compressed\216r3wm1od-4mj3v3l9cu.gz
 C:\Users\manam\Downloads\EduVisionMVC-Portfolio\obj\Debug\net9.0\compressed\3h86dbg2gu-61n19gt1b8.gz
 C:\Users\manam\Downloads\EduVisionMVC-Portfolio\obj\Debug\net9.0\compressed\1tcva70b8r-xtxxf3hu2r.gz
 C:\Users\manam\Downloads\EduVisionMVC-Portfolio\obj\Debug\net9.0\compressed\b0zarde2ms-bqjiyaj88i.gz
@@ -223,3 +222,9 @@ C:\Users\manam\Downloads\EduVisionMVC-Portfolio\obj\Debug\net9.0\refint\Eduvisio
 C:\Users\manam\Downloads\EduVisionMVC-Portfolio\obj\Debug\net9.0\EduvisionMvc.pdb
 C:\Users\manam\Downloads\EduVisionMVC-Portfolio\obj\Debug\net9.0\EduvisionMvc.genruntimeconfig.cache
 C:\Users\manam\Downloads\EduVisionMVC-Portfolio\obj\Debug\net9.0\ref\EduvisionMvc.dll
+C:\Users\manam\Downloads\EduVisionMVC-Portfolio\bin\Debug\net9.0\Microsoft.AspNetCore.Cryptography.Internal.dll
+C:\Users\manam\Downloads\EduVisionMVC-Portfolio\bin\Debug\net9.0\Microsoft.AspNetCore.Cryptography.KeyDerivation.dll
+C:\Users\manam\Downloads\EduVisionMVC-Portfolio\bin\Debug\net9.0\Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll
+C:\Users\manam\Downloads\EduVisionMVC-Portfolio\bin\Debug\net9.0\Microsoft.Extensions.Identity.Core.dll
+C:\Users\manam\Downloads\EduVisionMVC-Portfolio\bin\Debug\net9.0\Microsoft.Extensions.Identity.Stores.dll
+C:\Users\manam\Downloads\EduVisionMVC-Portfolio\obj\Debug\net9.0\compressed\216r3wm1od-xaccgwdejg.gz
