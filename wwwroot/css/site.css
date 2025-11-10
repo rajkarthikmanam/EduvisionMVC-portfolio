@@ -1,5 +1,23 @@
 /* === Eduvision modern theme =========================================== */
-:root{
+/* Light theme (default) */
+:root {
+  --bg: #f8f9fa;
+  --panel: #ffffff;
+  --panel-2: #f1f3f5;
+  --text: #212529;
+  --muted: #6c757d;
+  --primary: #2962ff;
+  --primary-2: #1f4dd4;
+  --ok: #22c55e;
+  --warn: #f59e0b;
+  --err: #ef4444;
+  --ring: 0 0 0 3px rgba(41,98,255,.25);
+  --radius: 14px;
+  --shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+
+/* Dark theme */
+body.dark-mode {
   --bg:#0f1420;
   --panel:#121a29;
   --panel-2:#162034;
@@ -17,17 +35,27 @@
 
 html,body{height:100%;}
 body{
+  background: var(--bg);
+  color:var(--text);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+body.dark-mode {
   background: radial-gradient(1200px 800px at -10% -10%, #1a2250 0%, transparent 60%),
               radial-gradient(900px 700px at 110% -10%, #072b43 0%, transparent 60%),
               var(--bg);
-  color:var(--text);
 }
 
 /* Header / navbar */
 .navbar{
-  background:rgba(18,26,41,.7)!important;
+  background: rgba(255,255,255,.95)!important;
   backdrop-filter: blur(8px);
-  border-bottom:1px solid rgba(255,255,255,.06)!important;
+  border-bottom: 1px solid rgba(0,0,0,.06)!important;
+}
+
+body.dark-mode .navbar {
+  background: rgba(18,26,41,.7)!important;
+  border-bottom: 1px solid rgba(255,255,255,.06)!important;
 }
 .navbar-brand, .navbar .nav-link{color:var(--text)!important;}
 .navbar .nav-link:hover{color:#fff!important;}
