@@ -1,0 +1,38 @@
+@model IEnumerable<EduvisionMvc.Models.CourseAnnouncement>
+@{
+    ViewData["Title"] = "My Announcements";
+}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a asp-controller="InstructorDashboard" asp-action="Index" class="btn btn-outline-secondary btn-sm mb-2">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+            <h2><i class="bi bi-megaphone text-info"></i> My Announcements</h2>
+        </div>
+        <a asp-action="Create" class="btn btn-info text-white"><i class="bi bi-plus-circle"></i> New Announcement</a>
+    </div>
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info"><i class="bi bi-info-circle"></i> No announcements yet.</div>
+    }
+    else
+    {
+        <div class="list-group">
+            @foreach (var a in Model)
+            {
+                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-start">
+                    <div class="ms-2 me-auto">
+                        <div class="fw-bold">@a.Title <small class="text-muted">(@a.Course?.Code)</small></div>
+                        <div>@a.Content</div>
+                        <small class="text-muted">@a.CreatedAt.ToString("MMM dd, yyyy HH:mm")</small>
+                    </div>
+                    <div class="btn-group btn-group-sm">
+                        <a asp-action="Edit" asp-route-id="@a.Id" class="btn btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                        <a asp-action="Delete" asp-route-id="@a.Id" class="btn btn-outline-danger"><i class="bi bi-trash"></i></a>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

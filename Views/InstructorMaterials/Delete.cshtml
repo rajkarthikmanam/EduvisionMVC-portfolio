@@ -1,0 +1,33 @@
+@model EduvisionMvc.Models.CourseMaterial
+@{
+    ViewData["Title"] = "Delete Material";
+}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="bi bi-trash"></i> Confirm Delete</h4>
+                </div>
+                <div class="card-body">
+                    <p>Are you sure you want to delete the following material?</p>
+                    <dl class="row">
+                        <dt class="col-sm-3">Title</dt>
+                        <dd class="col-sm-9">@Model.Title</dd>
+                        <dt class="col-sm-3">Course</dt>
+                        <dd class="col-sm-9">@Model.Course?.Code</dd>
+                        <dt class="col-sm-3">Uploaded</dt>
+                        <dd class="col-sm-9">@Model.UploadedDate.ToString("MMM dd, yyyy")</dd>
+                    </dl>
+                    <form asp-action="Delete">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Delete</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

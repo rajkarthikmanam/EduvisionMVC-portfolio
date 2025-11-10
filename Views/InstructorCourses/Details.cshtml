@@ -1,0 +1,172 @@
+@model EduvisionMvc.Models.Course
+@{
+    ViewData["Title"] = Model.Code + " Details";
+}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>@Model.Code - @Model.Title</h2>
+        <span class="badge bg-secondary">@Model.Credits credits</span>
+    </div>
+    <p class="text-muted">Department: @Model.Department?.Name</p>
+    <p>@Model.Description</p>
+
+    @* Enrollments with Progress Tracking *@
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <strong><i class="bi bi-people-fill"></i> Student Enrollments</strong>
+        </div>
+        <div class="card-body">
+            @if (!Model.Enrollments?.Any() ?? true)
+            {
+                <div class="text-muted">No students enrolled yet.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Progress</th>
+                                <th>Hours</th>
+                                <th>Last Active</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var enr in Model.Enrollments!)
+                            {
+                                <tr>
+                                    <td>@enr.Student?.Name</td>
+                                    <td>
+                                        <div class="progress" style="width: 120px;">
+                                            <div class="progress-bar bg-success" role="progressbar" 
+                                                 style="width: @(enr.ProgressPercentage)%;" 
+                                                 aria-valuenow="@enr.ProgressPercentage" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                                @(enr.ProgressPercentage)%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>@enr.TotalHoursSpent h</td>
+                                    <td>
+                                        @if (enr.LastAccessDate.HasValue)
+                                        {
+                                            var diff = DateTime.UtcNow - enr.LastAccessDate.Value;
+                                            if (diff.TotalHours < 1) { <span class="text-success">Just now</span> }
+                                            else if (diff.TotalHours < 24) { <span class="text-muted">@diff.Hours h ago</span> }
+                                            else { <span class="text-muted">@diff.Days d ago</span> }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Never</span>
+                                        }
+                                    </td>
+                                    <td>@(enr.LetterGrade ?? "—")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <strong>Materials</strong>
+                </div>
+                <div class="card-body">
+                    @if (!Model.Materials?.Any() ?? true)
+                    {
+                        <div class="text-muted">No materials yet.</div>
+                    }
+                    else
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var m in Model.Materials!)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>
+                                        @m.Title
+                                        @if (!m.IsPublished)
+                                        {
+                                            <span class="badge bg-warning text-dark ms-2">Draft</span>
+                                        }
+                                    </span>
+                                    @if (!string.IsNullOrWhiteSpace(m.Url))
+                                    {
+                                        <a href="@m.Url" target="_blank" class="btn btn-sm btn-outline-primary">Open</a>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <strong>Assignments</strong>
+                </div>
+                <div class="card-body">
+                    @if (!Model.Assignments?.Any() ?? true)
+                    {
+                        <div class="text-muted">No assignments yet.</div>
+                    }
+                    else
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var a in Model.Assignments!)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold">
+                                            @a.Title
+                                            @if (!a.IsPublished)
+                                            {
+                                                <span class="badge bg-warning text-dark ms-2">Draft</span>
+                                            }
+                                        </div>
+                                        <small class="text-muted">Due: @(a.DueDate?.ToString("MMM dd, yyyy") ?? "—")</small>
+                                    </div>
+                                    <span class="badge bg-secondary">@a.MaxPoints pts</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <strong>Announcements</strong>
+                </div>
+                <div class="card-body">
+                    @if (!Model.Announcements?.Any() ?? true)
+                    {
+                        <div class="text-muted">No announcements yet.</div>
+                    }
+                    else
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var an in Model.Announcements!)
+                            {
+                                <li class="list-group-item">
+                                    <div class="fw-bold">@an.Title</div>
+                                    <div>@an.Content</div>
+                                    <small class="text-muted">@an.CreatedAt.ToString("MMM dd, yyyy HH:mm")</small>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

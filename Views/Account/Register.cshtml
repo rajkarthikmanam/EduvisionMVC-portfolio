@@ -1,0 +1,127 @@
+@model EduvisionMvc.ViewModels.RegisterStudentViewModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="bi bi-person-plus-fill"></i> Create Account</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" asp-action="Register">
+                        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="FirstName" class="form-label"></label>
+                            <input asp-for="FirstName" class="form-control" />
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="LastName" class="form-label"></label>
+                            <input asp-for="LastName" class="form-control" />
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label"></label>
+                            <input asp-for="Password" class="form-control" />
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                            <small class="text-muted">Minimum 6 characters, at least one digit and one lowercase letter.</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="ConfirmPassword" class="form-label"></label>
+                            <input asp-for="ConfirmPassword" class="form-control" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Age" class="form-label"></label>
+                            <input asp-for="Age" class="form-control" />
+                            <span asp-validation-for="Age" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Phone" class="form-label"></label>
+                            <input asp-for="Phone" class="form-control" />
+                            <span asp-validation-for="Phone" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DepartmentId" class="form-label"></label>
+                            <select asp-for="DepartmentId" class="form-select" asp-items="@(new SelectList((IEnumerable<EduvisionMvc.Models.Department>)ViewBag.Departments, nameof(EduvisionMvc.Models.Department.Id), nameof(EduvisionMvc.Models.Department.Name)))"></select>
+                            <span asp-validation-for="DepartmentId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Major" class="form-label"></label>
+                            <input asp-for="Major" class="form-control" placeholder="e.g., Software Engineering (optional)" />
+                            <span asp-validation-for="Major" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="AcademicLevel" class="form-label"></label>
+                            <select asp-for="AcademicLevel" class="form-select">
+                                <option value="">-- select level --</option>
+                                <option>Freshman</option>
+                                <option>Sophomore</option>
+                                <option>Junior</option>
+                                <option>Senior</option>
+                                <option>Graduate</option>
+                            </select>
+                            <span asp-validation-for="AcademicLevel" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="EnrollmentDate" class="form-label"></label>
+                            <input asp-for="EnrollmentDate" class="form-control" />
+                            <span asp-validation-for="EnrollmentDate" class="text-danger"></span>
+                        </div>
+                        
+                        <input type="hidden" name="role" value="Student" />
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle-fill"></i> Register
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <hr class="my-4" />
+                    
+                    <p class="text-center mb-0">
+                        Already have an account? 
+                        <a asp-action="Login" class="text-decoration-none">Sign in here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Auto-suggest Major based on Department selection if Major is empty
+        const deptSelect = document.getElementById('DepartmentId');
+        const majorInput = document.getElementById('Major');
+        if(deptSelect && majorInput){
+            deptSelect.addEventListener('change', () => {
+                if(!majorInput.value.trim()){
+                    const selected = deptSelect.options[deptSelect.selectedIndex].text;
+                    majorInput.value = selected;
+                }
+            });
+        }
+    </script>
+}

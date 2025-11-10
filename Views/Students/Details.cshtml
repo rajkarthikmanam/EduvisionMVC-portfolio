@@ -34,6 +34,12 @@
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Gpa)
         </dd>
+        <dt class="col-sm-2">Phone</dt>
+        <dd class="col-sm-10">@(Model.Phone ?? "-")</dd>
+        <dt class="col-sm-2">Academic Level</dt>
+        <dd class="col-sm-10">@(Model.AcademicLevel ?? "-")</dd>
+        <dt class="col-sm-2">Advisor</dt>
+        <dd class="col-sm-10">@(Model.AdvisorInstructor != null ? $"Dr. {Model.AdvisorInstructor.LastName}" : "-")</dd>
     </dl>
 </div>
 <div>

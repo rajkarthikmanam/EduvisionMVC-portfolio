@@ -1,0 +1,64 @@
+@model IEnumerable<EduvisionMvc.ViewModels.CourseEnrollOption>
+@{
+    ViewData["Title"] = "Enroll in Courses";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0"><i class="bi bi-journal-plus"></i> Enroll in Courses</h2>
+        <a asp-controller="StudentDashboard" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    @if (TempData["EnrollMessage"] != null)
+    {
+        <div class="alert alert-info">@TempData["EnrollMessage"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-success">
+            You're enrolled in all available courses for the current term.
+        </div>
+    }
+
+    <div class="row">
+        @foreach (var option in Model)
+        {
+            var c = option.Course;
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">@c.Code - @c.Title</h5>
+                        <p class="card-text small text-muted">@c.Department?.Name</p>
+                        <p class="mb-1"><strong>Credits:</strong> @c.Credits</p>
+                        <p class="mb-2">
+                            <strong>Capacity:</strong> @option.CurrentEnrollments / @c.Capacity
+                            <br />
+                            <strong>Remaining Seats:</strong> @(option.RemainingSeats < 0 ? 0 : option.RemainingSeats)
+                        </p>
+                        <p class="small">@c.Description</p>
+                    </div>
+                    <div class="card-footer bg-white">
+                        @if (option.IsFull)
+                        {
+                            <button class="btn btn-outline-secondary btn-sm" disabled>
+                                <i class="bi bi-lock-fill"></i> Full
+                            </button>
+                        }
+                        else
+                        {
+                            <form asp-action="Enroll" method="post" class="d-inline">
+                                <input type="hidden" name="courseId" value="@c.Id" />
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-plus-circle"></i> Enroll
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

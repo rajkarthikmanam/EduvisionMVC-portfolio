@@ -15,6 +15,8 @@
             <th>@Html.DisplayNameFor(model => model.Code)</th>
             <th>@Html.DisplayNameFor(model => model.Title)</th>
             <th>@Html.DisplayNameFor(model => model.Credits)</th>
+            <th>@Html.DisplayNameFor(model => model.Level)</th>
+            <th>@Html.DisplayNameFor(model => model.DeliveryMode)</th>
             <th>Department</th>
             <th></th>
         </tr>
@@ -25,6 +27,8 @@
             <td>@item.Code</td>
             <td>@item.Title</td>
             <td>@item.Credits</td>
+            <td>@item.Level</td>
+            <td>@item.DeliveryMode</td>
             <td>@(item.Department != null ? item.Department.Name : "-")</td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
