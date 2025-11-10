@@ -3,6 +3,7 @@ using System;
 using EduvisionMvc.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduvisionMvc.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251109071714_UpdateModels_20251109")]
+    partial class UpdateModels_20251109
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.10");
@@ -125,24 +128,12 @@ namespace EduvisionMvc.Migrations
                     b.Property<int>("CourseId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("TEXT");
-
-                    b.Property<string>("Instructions")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsPublished")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("MaxPoints")
-                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -206,9 +197,6 @@ namespace EduvisionMvc.Migrations
                     b.Property<int>("Credits")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("DeliveryMode")
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("DepartmentId")
                         .HasColumnType("INTEGER");
 
@@ -219,13 +207,7 @@ namespace EduvisionMvc.Migrations
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Level")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Location")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Prerequisites")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("RequiresApproval")
@@ -312,21 +294,9 @@ namespace EduvisionMvc.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("FilePath")
-                        .HasColumnType("TEXT");
-
-                    b.Property<long>("FileSize")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsPublished")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("INTEGER");
 
                     b.Property<string>("UploadedById")
                         .IsRequired()
@@ -336,6 +306,7 @@ namespace EduvisionMvc.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Url")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -353,35 +324,15 @@ namespace EduvisionMvc.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("ChairId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Code")
                         .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Email")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("OfficeLocation")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Phone")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Website")
-                        .HasColumnType("TEXT");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("ChairId");
 
                     b.ToTable("Departments");
                 });
@@ -444,12 +395,6 @@ namespace EduvisionMvc.Migrations
                     b.Property<DateTime?>("ApprovedDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("AttemptNumber")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("CompletedDate")
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("CourseId")
                         .HasColumnType("INTEGER");
 
@@ -459,22 +404,10 @@ namespace EduvisionMvc.Migrations
                     b.Property<DateTime>("EnrolledDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("IsRepeatAttempt")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("LastAccessDate")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("LetterGrade")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Notes")
-                        .HasColumnType("TEXT");
-
                     b.Property<decimal?>("Numeric_Grade")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("ProgressPercentage")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Status")
@@ -486,9 +419,6 @@ namespace EduvisionMvc.Migrations
                     b.Property<string>("Term")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("TotalHoursSpent")
-                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -541,9 +471,6 @@ namespace EduvisionMvc.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Bio")
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("DepartmentId")
                         .HasColumnType("INTEGER");
 
@@ -555,23 +482,8 @@ namespace EduvisionMvc.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("HireDate")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("OfficeHours")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("OfficeLocation")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Phone")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Title")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("UserId")
@@ -617,16 +529,7 @@ namespace EduvisionMvc.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("AcademicLevel")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("AdvisorInstructorId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("Age")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("DepartmentId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Email")
@@ -648,9 +551,6 @@ namespace EduvisionMvc.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Phone")
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("TotalCredits")
                         .HasColumnType("INTEGER");
 
@@ -658,10 +558,6 @@ namespace EduvisionMvc.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AdvisorInstructorId");
-
-                    b.HasIndex("DepartmentId");
 
                     b.ToTable("Students");
                 });
@@ -959,16 +855,6 @@ namespace EduvisionMvc.Migrations
                     b.Navigation("UploadedBy");
                 });
 
-            modelBuilder.Entity("EduvisionMvc.Models.Department", b =>
-                {
-                    b.HasOne("EduvisionMvc.Models.Instructor", "Chair")
-                        .WithMany()
-                        .HasForeignKey("ChairId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Chair");
-                });
-
             modelBuilder.Entity("EduvisionMvc.Models.Discussion", b =>
                 {
                     b.HasOne("EduvisionMvc.Models.Course", "Course")
@@ -1057,22 +943,6 @@ namespace EduvisionMvc.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("EduvisionMvc.Models.Student", b =>
-                {
-                    b.HasOne("EduvisionMvc.Models.Instructor", "AdvisorInstructor")
-                        .WithMany()
-                        .HasForeignKey("AdvisorInstructorId");
-
-                    b.HasOne("EduvisionMvc.Models.Department", "Department")
-                        .WithMany("Students")
-                        .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("AdvisorInstructor");
-
-                    b.Navigation("Department");
                 });
 
             modelBuilder.Entity("EduvisionMvc.Models.UserProfile", b =>
@@ -1177,8 +1047,6 @@ namespace EduvisionMvc.Migrations
             modelBuilder.Entity("EduvisionMvc.Models.Department", b =>
                 {
                     b.Navigation("Courses");
-
-                    b.Navigation("Students");
                 });
 
             modelBuilder.Entity("EduvisionMvc.Models.Discussion", b =>
