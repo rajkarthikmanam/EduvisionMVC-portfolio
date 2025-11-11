@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650" role="img" aria-labelledby="title desc">
+  <title id="title">EduVision ERD (Core 5)</title>
+  <desc id="desc">Five-table ERD without Department Chair: Student, Course, Enrollment, Department, Instructor with key relationships.</desc>
+  <defs>
+    <style><![CDATA[
+      .card { fill: #ffffff; stroke: #2d3748; stroke-width: 1.2; rx: 8; ry: 8; }
+      .header { fill: #edf2f7; stroke: #2d3748; stroke-width: 1.2; }
+      .title { font: 700 16px Segoe UI, Arial, sans-serif; fill: #1a202c; }
+      .field { font: 12px Segoe UI, Arial, sans-serif; fill: #2d3748; }
+      .caption { font: 12px Segoe UI, Arial, sans-serif; fill: #4a5568; }
+      .legend { font: 12px Segoe UI, Arial, sans-serif; fill: #4a5568; }
+      .line { stroke: #4a5568; stroke-width: 1.4; }
+      .m2m { stroke-dasharray: 4 3; }
+      .anchor { fill: none; stroke: none; }
+      .badge { font: 11px Segoe UI, Arial, sans-serif; fill: #2d3748; }
+    ]]></style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4a5568" />
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="1200" height="650" fill="#f7fafc" />
+  <text x="600" y="34" text-anchor="middle" class="title">EduVision ERD (Core 5)</text>
+  <text x="600" y="54" text-anchor="middle" class="caption">Chair removed • 5 entities • 6 relationships</text>
+
+  <!-- Department -->
+  <g id="department" transform="translate(60,120)">
+    <rect class="card" x="0" y="0" width="280" height="170" />
+    <rect class="header" x="0" y="0" width="280" height="34" />
+    <text x="12" y="22" class="title">Department</text>
+    <g transform="translate(12,50)">
+      <text class="field" y="0">DepartmentId (PK)</text>
+      <text class="field" y="22">Name</text>
+      <text class="field" y="44">Budget</text>
+      <text class="field" y="66">StartDate</text>
+    </g>
+  </g>
+
+  <!-- Student -->
+  <g id="student" transform="translate(420,80)">
+    <rect class="card" x="0" y="0" width="300" height="210" />
+    <rect class="header" x="0" y="0" width="300" height="34" />
+    <text x="12" y="22" class="title">Student</text>
+    <g transform="translate(12,50)">
+      <text class="field" y="0">StudentId (PK)</text>
+      <text class="field" y="22">FirstName, LastName</text>
+      <text class="field" y="44">Email</text>
+      <text class="field" y="66">EnrollmentDate</text>
+      <text class="field" y="88">DepartmentId (FK)</text>
+      <text class="field" y="110">AdvisorId (FK)</text>
+    </g>
+  </g>
+
+  <!-- Course -->
+  <g id="course" transform="translate(420,360)">
+    <rect class="card" x="0" y="0" width="300" height="190" />
+    <rect class="header" x="0" y="0" width="300" height="34" />
+    <text x="12" y="22" class="title">Course</text>
+    <g transform="translate(12,50)">
+      <text class="field" y="0">CourseId (PK)</text>
+      <text class="field" y="22">Title</text>
+      <text class="field" y="44">Credits</text>
+      <text class="field" y="66">DepartmentId (FK)</text>
+      <text class="field" y="88">Capacity</text>
+    </g>
+  </g>
+
+  <!-- Instructor -->
+  <g id="instructor" transform="translate(840,120)">
+    <rect class="card" x="0" y="0" width="280" height="170" />
+    <rect class="header" x="0" y="0" width="280" height="34" />
+    <text x="12" y="22" class="title">Instructor</text>
+    <g transform="translate(12,50)">
+      <text class="field" y="0">InstructorId (PK)</text>
+      <text class="field" y="22">FirstName, LastName</text>
+      <text class="field" y="44">HireDate</text>
+      <text class="field" y="66">DepartmentId (FK)</text>
+    </g>
+  </g>
+
+  <!-- Enrollment -->
+  <g id="enrollment" transform="translate(820,360)">
+    <rect class="card" x="0" y="0" width="300" height="190" />
+    <rect class="header" x="0" y="0" width="300" height="34" />
+    <text x="12" y="22" class="title">Enrollment</text>
+    <g transform="translate(12,50)">
+      <text class="field" y="0">EnrollmentId (PK)</text>
+      <text class="field" y="22">StudentId (FK)</text>
+      <text class="field" y="44">CourseId (FK)</text>
+      <text class="field" y="66">Grade</text>
+      <text class="field" y="88">Status</text>
+    </g>
+  </g>
+
+  <!-- Relationships -->
+  <!-- Department -> Students -->
+  <line class="line" x1="340" y1="160" x2="420" y2="170" marker-end="url(#arrow)"/>
+  <!-- Department -> Courses -->
+  <line class="line" x1="280" y1="260" x2="420" y2="410" marker-end="url(#arrow)"/>
+  <!-- Department -> Instructors -->
+  <line class="line" x1="340" y1="190" x2="840" y2="170" marker-end="url(#arrow)"/>
+
+  <!-- Student ↔ Course via Enrollment (M:N) shown as dashed connectors to Enrollment -->
+  <line class="line m2m" x1="570" y1="290" x2="970" y2="390" marker-end="url(#arrow)"/>
+  <line class="line m2m" x1="570" y1="430" x2="970" y2="430" marker-end="url(#arrow)"/>
+
+  <!-- Course ↔ Instructor (M:N) -->
+  <line class="line m2m" x1="720" y1="430" x2="940" y2="200" marker-end="url(#arrow)"/>
+
+  <!-- Instructor → Students (Advisor) -->
+  <line class="line" x1="940" y1="200" x2="720" y2="170" marker-end="url(#arrow)"/>
+
+  <!-- Legend -->
+  <g transform="translate(60,560)">
+    <rect class="card" x="0" y="0" width="540" height="70" />
+    <rect class="header" x="0" y="0" width="540" height="26" />
+    <text x="12" y="18" class="title">Legend</text>
+    <g transform="translate(12,42)">
+      <line class="line" x1="0" y1="0" x2="40" y2="0"/>
+      <text x="50" y="4" class="legend">1-to-many (directional)</text>
+      <line class="line m2m" x1="200" y1="0" x2="240" y2="0"/>
+      <text x="250" y="4" class="legend">many-to-many (via junction)</text>
+    </g>
+  </g>
+
+  <!-- Badges -->
+  <text x="1180" y="24" text-anchor="end" class="badge">No Chair</text>
+</svg>

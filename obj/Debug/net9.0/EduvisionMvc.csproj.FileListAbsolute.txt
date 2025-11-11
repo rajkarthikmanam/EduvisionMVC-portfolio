@@ -229,3 +229,5 @@ C:\Users\manam\Downloads\EduVisionMVC-Portfolio\bin\Debug\net9.0\Microsoft.Exten
 C:\Users\manam\Downloads\EduVisionMVC-Portfolio\bin\Debug\net9.0\Microsoft.Extensions.Identity.Stores.dll
 C:\Users\manam\Downloads\EduVisionMVC-Portfolio\obj\Debug\net9.0\compressed\216r3wm1od-xaccgwdejg.gz
 C:\Users\manam\Downloads\EduVisionMVC-Portfolio\bin\Debug\net9.0\App_Data\provided_seed.json
+C:\Users\manam\Downloads\EduVisionMVC-Portfolio\obj\Debug\net9.0\compressed\0eqn2hzii8-otm0meenw4.gz
+C:\Users\manam\Downloads\EduVisionMVC-Portfolio\obj\Debug\net9.0\compressed\zq6rcrts4h-bf59kfc7cp.gz
