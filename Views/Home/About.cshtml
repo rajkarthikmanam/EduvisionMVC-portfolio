@@ -2,23 +2,25 @@
 
 <div class="card p-3 m-2 shadow-sm">
   <h3>Raj Karthik Manam</h3>
-  <p><strong>Role:</strong> Backend, CRUD & API Integration</p>
+  <p><strong>Role:</strong> Backend Developer • System Architect </p>
   <ul>
-    <li>Developed database schema, EF Core models, and migrations</li>
-    <li>Implemented CRUD controllers for Students, Courses, Enrollments</li>
-    <li>Built REST API endpoints and HttpClient integration</li>
-    <li>Handled Git version control, merge conflicts, and deployment coordination</li>
+     Karthik developed the backend architecture, API integrations, and database logic
+     connecting students, instructors, and departments. He implemented secure authentication,
+     EF Core models, and Botpress integration for intelligent assistant support.
+     Additionally, he handled Git version control, merge conflicts, deployment configuration and quality assurance testing,
+     ensuring a robust, scalable foundation for EduVision.
   </ul>
 </div>
 
 <div class="card p-3 m-2 shadow-sm">
   <h3>Ananya Gullapally</h3>
-  <p><strong>Role:</strong> Frontend Visualization & Backend Collaboration</p>
+  <p><strong>Role:</strong> Frontend Developer • UI/UX Designer </p>
   <ul>
-    <li>Designed and implemented visualization page using Chart.js</li>
-    <li>Built Instructor and Department CRUD controllers</li>
-    <li>Styled UI, About page, and visual consistency across all pages</li>
-    <li>Worked on API testing and data-visual link validation</li>
+     Ananya led the design and development of the platform’s user interface, creating
+     a cohesive and responsive experience across student, instructor, and admin portals.
+     She focused on intuitive navigation, visual analytics, and accessibility. 
+     Ananya also contributed to testing and Botpress integration, ensuring smooth
+     user interaction and chatbot flow alignment within the overall platform.
   </ul>
 </div>
 
@@ -27,8 +29,35 @@
 <a class="btn btn-primary" href="https://github.com/rajkarthikmanam/EduvisionMVC-portfolio" target="_blank">Open Repository</a>
 
 <h2 class="mt-5">Logical Data Model (ERD)</h2>
-<p>The system follows a normalized 5-table relational model connecting Students, Courses, Enrollments, Departments, and Instructors.</p>
+<p>The system follows a comprehensive relational model with 5 core entities managing academic operations: <strong>Students</strong>, <strong>Courses</strong>, <strong>Enrollments</strong>, <strong>Departments</strong>, and <strong>Instructors</strong>.</p>
+
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h5>Core Entities:</h5>
+        <ul>
+            <li><strong>Student</strong> - 12 properties tracking academic progress</li>
+            <li><strong>Course</strong> - 15 properties with capacity & approval management</li>
+            <li><strong>Enrollment</strong> - Junction table with workflow (Pending→Approved→Completed)</li>
+            <li><strong>Department</strong> - Organizational structure linking courses & faculty</li>
+            <li><strong>Instructor</strong> - Faculty with course assignments & student advising</li>
+        </ul>
+    </div>
+    <div class="col-md-6">
+        <h5>Key Relationships:</h5>
+        <ul>
+            <li>Department → Courses (one-to-many)</li>
+            <li>Department → Students (one-to-many)</li>
+            <li>Department → Instructors (one-to-many)</li>
+            <li>Student ↔ Course via Enrollment (many-to-many)</li>
+            <li>Course ↔ Instructor (many-to-many)</li>
+            <li>Instructor → Students as Advisor (one-to-many)</li>
+        </ul>
+    </div>
+</div>
+
 <div class="text-center mt-3 mb-5">
-    <img src="~/img/erd.png" alt="EduVision ERD Diagram" style="max-width:85%; border-radius:12px; box-shadow:0 0 10px rgba(0,0,0,0.15);" />
+    <img src="@Url.Content("~/img/erd.png")" alt="EduVision ERD Diagram" style="max-width:100%; height:auto; border-radius:12px; box-shadow:0 0 10px rgba(0,0,0,0.15);" />
+    <p class="text-muted mt-2"><small>5 normalized tables with 6 key relationships (Dept→Courses, Dept→Students, Dept→Instructors, Student↔Course, Course↔Instructor, Instructor→Students) and composite unique constraints</small></p>
 </div>
 
