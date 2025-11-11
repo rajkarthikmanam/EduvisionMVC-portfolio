@@ -43,6 +43,7 @@ public class RecentNotificationSummary
 public class ScatterDataPoint
 {
     public string CourseCode { get; set; } = "";
+    public string DepartmentCode { get; set; } = "";
     public int X { get; set; } // Capacity
     public int Y { get; set; } // Current Enrollment
     public double UtilizationRate { get; set; } // Y/X percentage

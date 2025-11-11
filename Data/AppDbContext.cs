@@ -35,6 +35,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> opts) : IdentityDbConte
             .Property(x => x.Gpa)
             .HasPrecision(3, 2);
 
+        // Unique Email for Student test identity mapping
+        b.Entity<Student>()
+            .HasIndex(s => s.Email)
+            .IsUnique();
+
         b.Entity<Student>()
             .HasOne(s => s.User)
             .WithOne(u => u.Student)
@@ -45,6 +50,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> opts) : IdentityDbConte
             .HasOne(i => i.User)
             .WithOne(u => u.Instructor)
             .HasForeignKey<ApplicationUser>(u => u.InstructorId);
+
+        // Unique Email for Instructor test identity mapping
+        b.Entity<Instructor>()
+            .HasIndex(i => i.Email)
+            .IsUnique();
 
         // Link Student to Department (optional FK)
         b.Entity<Student>()

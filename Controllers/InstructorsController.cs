@@ -62,9 +62,22 @@ namespace EduvisionMvc.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(instructor);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    _context.Add(instructor);
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Instructor created successfully!";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("UNIQUE constraint failed") == true || 
+                                                   ex.InnerException?.Message.Contains("duplicate") == true)
+                {
+                    TempData["Error"] = "Duplicate detected: An instructor with this email already exists.";
+                }
+                catch (DbUpdateException ex)
+                {
+                    TempData["Error"] = $"Error creating instructor: {ex.InnerException?.Message ?? ex.Message}";
+                }
             }
             PopulateDepartmentsSelectList(instructor.DepartmentId);
             return View(instructor);
@@ -94,13 +107,23 @@ namespace EduvisionMvc.Controllers
                 {
                     _context.Update(instructor);
                     await _context.SaveChangesAsync();
+                    TempData["Success"] = "Instructor updated successfully!";
                     return RedirectToAction(nameof(Index));
+                }
+                catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("UNIQUE constraint failed") == true || 
+                                                   ex.InnerException?.Message.Contains("duplicate") == true)
+                {
+                    TempData["Error"] = "Duplicate detected: An instructor with this email already exists.";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!_context.Instructors.Any(e => e.Id == instructor.Id))
                         return NotFound();
                     else throw;
+                }
+                catch (DbUpdateException ex)
+                {
+                    TempData["Error"] = $"Error updating instructor: {ex.InnerException?.Message ?? ex.Message}";
                 }
             }
             PopulateDepartmentsSelectList(instructor.DepartmentId);
@@ -125,9 +148,56 @@ namespace EduvisionMvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var instructor = await _context.Instructors.FindAsync(id);
-            if (instructor != null) _context.Instructors.Remove(instructor);
-            await _context.SaveChangesAsync();
+            var instructor = await _context.Instructors
+                .Include(i => i.CourseInstructors)
+                .FirstOrDefaultAsync(i => i.Id == id);
+                
+            if (instructor == null)
+            {
+                return NotFound();
+            }
+
+            // Check for course assignments
+            if (instructor.CourseInstructors.Any())
+            {
+                TempData["Error"] = $"Cannot delete instructor '{instructor.FirstName} {instructor.LastName}' because they are assigned to {instructor.CourseInstructors.Count} course(s). Please remove course assignments first.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Check if instructor is a department chair
+            var isDepartmentChair = await _context.Departments.AnyAsync(d => d.ChairId == id);
+            if (isDepartmentChair)
+            {
+                TempData["Error"] = $"Cannot delete instructor '{instructor.FirstName} {instructor.LastName}' because they are a department chair. Please assign a new chair first.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Check if instructor is an advisor
+            var hasAdvisees = await _context.Students.AnyAsync(s => s.AdvisorInstructorId == id);
+            if (hasAdvisees)
+            {
+                TempData["Error"] = $"Cannot delete instructor '{instructor.FirstName} {instructor.LastName}' because they are advising students. Please reassign advisees first.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            try
+            {
+                // Delete associated User account if exists
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == instructor.Email);
+                if (user != null)
+                {
+                    _context.Users.Remove(user);
+                }
+
+                _context.Instructors.Remove(instructor);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = $"Instructor '{instructor.FirstName} {instructor.LastName}' deleted successfully!";
+            }
+            catch (DbUpdateException ex)
+            {
+                TempData["Error"] = $"Cannot delete instructor. Error: {ex.InnerException?.Message ?? ex.Message}";
+            }
+
             return RedirectToAction(nameof(Index));
         }
     }

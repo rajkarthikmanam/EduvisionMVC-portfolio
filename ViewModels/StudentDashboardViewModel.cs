@@ -13,8 +13,9 @@ public class StudentDashboardViewModel
     public string? AdvisorName { get; set; }
     public string? Phone { get; set; }
     public string? AcademicLevel { get; set; }
-    public int TotalCredits { get; set; }
+    public int TotalCredits { get; set; } // Completed credits (from enrollments)
     public int CreditsInProgress { get; set; }
+    public int CompletedCoursesCount { get; set; } // Count of completed courses
 
     // Charts Data
     public List<string> GradeLabels { get; set; } = new();
@@ -28,10 +29,12 @@ public class StudentDashboardViewModel
     // Course Lists
     public List<EnrollmentSummary> TopCourses { get; set; } = new();
     public List<EnrollmentSummary> WeakCourses { get; set; } = new();
+    public List<EnrollmentSummary> CompletedCourses { get; set; } = new(); // All completed courses
     public List<EnrollmentSummary> CurrentCourses { get; set; } = new();
+    public List<EnrollmentSummary> PendingCourses { get; set; } = new();
 
     // Progress Metrics
-    public int RequiredCredits { get; set; } = 120;
+    public int RequiredCredits { get; set; } = 120; // Credits required for graduation (from Student.TotalCredits)
     public decimal CompletionPercentage => (RequiredCredits == 0) ? 0 : (TotalCredits * 100m) / RequiredCredits;
     public List<Notification> RecentNotifications { get; set; } = new();
     

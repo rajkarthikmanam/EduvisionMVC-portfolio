@@ -12,24 +12,18 @@ public class InstructorDashboardViewModel
     public string Email { get; set; } = "";
     public int TotalCourses { get; set; }
     public int ActiveStudents { get; set; }
+    public int PendingApprovalsCount { get; set; }
 
     // Charts Data
     public List<string> CourseLabels { get; set; } = new();
     public List<int> EnrollmentCounts { get; set; } = new();
-    public List<string> GradeLabels { get; set; } = new();
-    public List<int> GradeDistribution { get; set; } = new();
-    
-    // Polar Area Chart: Grade comparison across courses
-    public List<PolarChartData> CourseGradeComparison { get; set; } = new();
 
     // Course Lists
     public List<CourseStatistics> CurrentCourses { get; set; } = new();
     public List<CourseHistory> PastCourses { get; set; } = new();
-    public List<StudentPerformance> TopStudents { get; set; } = new();
-
-    // Notifications and Materials
-    public List<Notification> RecentNotifications { get; set; } = new();
-    public List<CourseMaterial> RecentMaterials { get; set; } = new();
+    
+    // Pending Approvals
+    public List<PendingEnrollment> PendingApprovals { get; set; } = new();
 }
 
 public class CourseStatistics
@@ -39,6 +33,7 @@ public class CourseStatistics
     public string Title { get; set; } = "";
     public string Term { get; set; } = "";
     public int EnrollmentCount { get; set; }
+    public int Capacity { get; set; }
     public decimal AverageGrade { get; set; }
     public int Credits { get; set; }
     public string Schedule { get; set; } = "";
@@ -64,5 +59,16 @@ public class StudentPerformance
     public decimal GradeAverage { get; set; }
     public int CoursesCompleted { get; set; }
     public List<string> CompletedCourses { get; set; } = new();
+}
+
+public class PendingEnrollment
+{
+    public int EnrollmentId { get; set; }
+    public int StudentId { get; set; }
+    public string StudentName { get; set; } = "";
+    public string CourseCode { get; set; } = "";
+    public string CourseTitle { get; set; } = "";
+    public string Term { get; set; } = "";
+    public DateTime EnrollDate { get; set; }
 }
 

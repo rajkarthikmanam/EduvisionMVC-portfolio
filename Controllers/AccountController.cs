@@ -5,11 +5,10 @@ using EduvisionMvc.Models;
 using EduvisionMvc.Services;
 using EduvisionMvc.Data;
 using EduvisionMvc.ViewModels;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace EduvisionMvc.Controllers;
-
-[AllowAnonymous]
 public class AccountController : Controller
 {
     private readonly SignInManager<ApplicationUser> _signInManager;
@@ -17,29 +16,129 @@ public class AccountController : Controller
     private readonly ILoginRedirectService _redirectService;
     private readonly AppDbContext _db;
     private readonly IConfiguration _config;
+    private readonly IWebHostEnvironment _env;
 
     public AccountController(
         SignInManager<ApplicationUser> signInManager,
         UserManager<ApplicationUser> userManager,
         ILoginRedirectService redirectService,
         AppDbContext db,
-        IConfiguration config)
+        IConfiguration config,
+        IWebHostEnvironment env)
     {
         _signInManager = signInManager;
         _userManager = userManager;
         _redirectService = redirectService;
         _db = db;
         _config = config;
+        _env = env;
+    }
+
+    private async Task EnsureDomainLinksByEmailAsync(ApplicationUser user, string emailInput)
+    {
+        var email = (user.Email ?? emailInput ?? user.UserName ?? string.Empty).Trim();
+        // STUDENT
+        if (await _userManager.IsInRoleAsync(user, "Student"))
+        {
+            // Try finding by UserId first (most reliable), then by email
+            var student = await _db.Students.FirstOrDefaultAsync(s => s.UserId == user.Id);
+            if (student == null && !string.IsNullOrEmpty(email))
+            {
+                student = await _db.Students.FirstOrDefaultAsync(s => s.Email.ToLower() == email.ToLower());
+            }
+            if (student == null)
+            {
+                var dept = await _db.Departments.FirstOrDefaultAsync() ?? new Department { Name = "General" };
+                if (dept.Id == 0) { _db.Departments.Add(dept); await _db.SaveChangesAsync(); }
+                student = new Student
+                {
+                    UserId = user.Id,
+                    Name = ($"{user.FirstName} {user.LastName}").Trim(),
+                    Email = email,
+                    Major = dept.Name,
+                    DepartmentId = dept.Id,
+                    EnrollmentDate = DateTime.UtcNow.Date,
+                    Gpa = 0m,
+                    TotalCredits = 120 // Credits required for graduation
+                };
+                _db.Students.Add(student);
+                await _db.SaveChangesAsync();
+            }
+            // Always link user to the student entity found by email
+            if (user.StudentId != student.Id)
+            {
+                user.StudentId = student.Id;
+                await _userManager.UpdateAsync(user);
+            }
+            // Ensure back-link (optional) remains correct
+            if (student.UserId != user.Id)
+            {
+                student.UserId = user.Id;
+                _db.Update(student);
+                await _db.SaveChangesAsync();
+            }
+        }
+
+        // INSTRUCTOR
+        if (await _userManager.IsInRoleAsync(user, "Instructor"))
+        {
+            // Try finding by UserId first (most reliable), then by email
+            var instructor = await _db.Instructors.FirstOrDefaultAsync(i => i.UserId == user.Id);
+            if (instructor == null && !string.IsNullOrEmpty(email))
+            {
+                instructor = await _db.Instructors.FirstOrDefaultAsync(i => i.Email.ToLower() == email.ToLower());
+            }
+            if (instructor == null)
+            {
+                var dept = await _db.Departments.FirstOrDefaultAsync() ?? new Department { Name = "General" };
+                if (dept.Id == 0) { _db.Departments.Add(dept); await _db.SaveChangesAsync(); }
+                instructor = new Instructor
+                {
+                    UserId = user.Id,
+                    FirstName = user.FirstName ?? "Instructor",
+                    LastName = user.LastName ?? "User",
+                    Email = email,
+                    DepartmentId = dept.Id
+                };
+                _db.Instructors.Add(instructor);
+                await _db.SaveChangesAsync();
+            }
+            if (user.InstructorId != instructor.Id)
+            {
+                user.InstructorId = instructor.Id;
+                await _userManager.UpdateAsync(user);
+            }
+            if (instructor.UserId != user.Id)
+            {
+                instructor.UserId = user.Id;
+                _db.Update(instructor);
+                await _db.SaveChangesAsync();
+            }
+        }
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public IActionResult Login(string? returnUrl = null)
     {
+        // If already authenticated, skip the login page and redirect to the correct dashboard
+        if (User?.Identity?.IsAuthenticated == true)
+        {
+            var user = _userManager.GetUserAsync(User).GetAwaiter().GetResult();
+            if (user != null)
+            {
+                var redirect = _redirectService.GetRedirectResultAsync(user.Id).GetAwaiter().GetResult();
+                return redirect;
+            }
+            return RedirectToAction("Index", "Home");
+        }
+
         ViewData["ReturnUrl"] = returnUrl;
         return View();
     }
 
     [HttpPost]
+    [AllowAnonymous]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(string email, string password, string? returnUrl = null)
     {
@@ -50,15 +149,29 @@ public class AccountController : Controller
             return View();
         }
 
-        var result = await _signInManager.PasswordSignInAsync(email, password, isPersistent: false, lockoutOnFailure: false);
+        // Try finding user by email first, then fall back to username (supports demo1, etc.)
+        var user = await _userManager.FindByEmailAsync(email.Trim());
+        if (user == null)
+        {
+            user = await _userManager.FindByNameAsync(email.Trim());
+        }
+        if (user == null)
+        {
+            ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+            return View();
+        }
+
+        var result = await _signInManager.PasswordSignInAsync(user, password, isPersistent: false, lockoutOnFailure: false);
         if (result.Succeeded)
         {
-            var user = await _userManager.FindByEmailAsync(email);
             if (user != null)
             {
                 // Update last login timestamp
                 user.LastLoginDate = DateTime.UtcNow;
                 await _userManager.UpdateAsync(user);
+
+                // --- Ensure domain profile linkage (auto-heal) ---
+                await EnsureDomainLinksByEmailAsync(user, email);
 
                 var redirectResult = await _redirectService.GetRedirectResultAsync(user.Id);
                 return redirectResult;
@@ -69,11 +182,60 @@ public class AccountController : Controller
             return RedirectToAction("Index", "Home");
         }
 
-        ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+        // DEV convenience: auto-reset known demo account passwords if they drifted
+        if (_env.IsDevelopment())
+        {
+            var demoPasswords = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["admin@local.test"] = "Admin123!",
+                ["instructor@local.test"] = "Instructor123!",
+                ["math.prof@local.test"] = "Math123!",
+                ["eng.prof@local.test"] = "Eng123!",
+                ["bus.prof@local.test"] = "Bus123!",
+                ["student@local.test"] = "Student123!"
+            };
+
+            if (demoPasswords.TryGetValue(email.Trim(), out var demoPw))
+            {
+                var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var resetRes = await _userManager.ResetPasswordAsync(user, resetToken, demoPw);
+                if (resetRes.Succeeded)
+                {
+                    // try sign-in again with demo password
+                    var retry = await _signInManager.PasswordSignInAsync(user, demoPw, isPersistent: false, lockoutOnFailure: false);
+                    if (retry.Succeeded)
+                    {
+                        // mimic success path
+                        user.LastLoginDate = DateTime.UtcNow;
+                        await _userManager.UpdateAsync(user);
+
+                        await EnsureDomainLinksByEmailAsync(user, email);
+
+                        var redirectAfterReset = await _redirectService.GetRedirectResultAsync(user.Id);
+                        return redirectAfterReset;
+                    }
+                }
+            }
+        }
+
+        // Bubble up more specific states when possible
+        if (result.IsLockedOut)
+        {
+            ModelState.AddModelError(string.Empty, "Account locked out. Try again later.");
+        }
+        else if (result.RequiresTwoFactor)
+        {
+            ModelState.AddModelError(string.Empty, "Two-factor authentication is required.");
+        }
+        else
+        {
+            ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+        }
         return View();
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public IActionResult Register()
     {
         // Render student-focused registration form
@@ -86,6 +248,7 @@ public class AccountController : Controller
     }
 
     [HttpPost]
+    [AllowAnonymous]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Register(RegisterStudentViewModel model, string role = "Student")
     {
@@ -157,7 +320,7 @@ public class AccountController : Controller
                         DepartmentId = dept.Id,
                         EnrollmentDate = model.EnrollmentDate ?? DateTime.UtcNow.Date,
                         Gpa = 0m,
-                        TotalCredits = 0,
+                        TotalCredits = 120, // Credits required for graduation
                         Age = model.Age,
                         Phone = string.IsNullOrWhiteSpace(model.Phone) ? null : model.Phone.Trim(),
                         AcademicLevel = string.IsNullOrWhiteSpace(model.AcademicLevel) ? null : model.AcademicLevel.Trim(),
@@ -226,6 +389,7 @@ public class AccountController : Controller
         return RedirectToAction("Index", "Home");
     }
 
+    [AllowAnonymous]
     public IActionResult AccessDenied()
     {
         return View();
@@ -299,5 +463,26 @@ public class AccountController : Controller
 
         await _signInManager.SignInAsync(user, isPersistent: false);
         return RedirectToAction("Index", "InstructorDashboard");
+    }
+
+    // --- Diagnostics endpoint: quickly view role/profile linkage for current user ---
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> LinkDiagnostics()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return Unauthorized();
+        var roles = await _userManager.GetRolesAsync(user);
+        var hasStudent = user.StudentId != null && _db.Students.Any(s => s.Id == user.StudentId);
+        var hasInstructor = user.InstructorId != null && _db.Instructors.Any(i => i.Id == user.InstructorId);
+        return Json(new
+        {
+            user = user.Email,
+            roles,
+            studentId = user.StudentId,
+            instructorId = user.InstructorId,
+            hasStudent,
+            hasInstructor
+        });
     }
 }

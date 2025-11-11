@@ -29,7 +29,8 @@ public class AdminDashboardController : Controller
         var totalStudents = await _db.Students.CountAsync();
         var totalInstructors = await _db.Instructors.CountAsync();
         var totalCourses = await _db.Courses.CountAsync();
-        var activeEnrollments = await _db.Enrollments.CountAsync(e => e.Numeric_Grade == null);
+        // Active = Fall 2025 term, Approved or Pending, no grade
+        var activeEnrollments = await _db.Enrollments.CountAsync(e => e.Term == "Fall 2025" && (e.Status == EnrollmentStatus.Approved || e.Status == EnrollmentStatus.Pending) && e.Numeric_Grade == null);
         var avgGpa = await _db.Students.Where(s => s.Gpa > 0).Select(s => s.Gpa).DefaultIfEmpty().AverageAsync();
         var materialsCount = await _db.CourseMaterials.CountAsync();
         var discussionsCount = await _db.Discussions.CountAsync();
@@ -53,7 +54,7 @@ public class AdminDashboardController : Controller
                 Code = c.Code,
                 Title = c.Title,
                 Capacity = c.Capacity,
-                Current = c.Enrollments.Count(e => e.Numeric_Grade == null)
+                Current = c.Enrollments.Count(e => e.Term == "Fall 2025" && (e.Status == EnrollmentStatus.Approved || e.Status == EnrollmentStatus.Pending))
             })
             .Where(c => c.Current * 100 / c.Capacity >= 80)
             .OrderByDescending(c => c.Current * 100 / c.Capacity)
@@ -75,13 +76,15 @@ public class AdminDashboardController : Controller
 
         // Scatter chart data: Course Capacity vs Current Enrollment
         var courseCapacityData = await _db.Courses
+            .Include(c => c.Department)
             .Where(c => c.Capacity > 0)
             .Select(c => new ScatterDataPoint
             {
                 CourseCode = c.Code,
+                DepartmentCode = c.Department != null ? c.Department.Code : "N/A",
                 X = c.Capacity,
-                Y = c.Enrollments.Count(e => e.Numeric_Grade == null),
-                UtilizationRate = c.Capacity > 0 ? Math.Round((double)c.Enrollments.Count(e => e.Numeric_Grade == null) / c.Capacity * 100, 1) : 0
+                Y = c.Enrollments.Count(e => e.Term == "Fall 2025" && (e.Status == EnrollmentStatus.Approved || e.Status == EnrollmentStatus.Pending)),
+                UtilizationRate = c.Capacity > 0 ? Math.Round((double)c.Enrollments.Count(e => e.Term == "Fall 2025" && (e.Status == EnrollmentStatus.Approved || e.Status == EnrollmentStatus.Pending)) / c.Capacity * 100, 1) : 0
             })
             .ToListAsync();
 

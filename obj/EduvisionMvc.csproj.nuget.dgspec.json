@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\manam\\Downloads\\EduVisionMVC-Portfolio\\EduvisionMvc.csproj": {}
+    "c:\\Users\\manam\\Downloads\\EduVisionMVC-Portfolio\\EduvisionMvc.csproj": {}
   },
   "projects": {
-    "C:\\Users\\manam\\Downloads\\EduVisionMVC-Portfolio\\EduvisionMvc.csproj": {
+    "c:\\Users\\manam\\Downloads\\EduVisionMVC-Portfolio\\EduvisionMvc.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\manam\\Downloads\\EduVisionMVC-Portfolio\\EduvisionMvc.csproj",
+        "projectUniqueName": "c:\\Users\\manam\\Downloads\\EduVisionMVC-Portfolio\\EduvisionMvc.csproj",
         "projectName": "EduvisionMvc",
-        "projectPath": "C:\\Users\\manam\\Downloads\\EduVisionMVC-Portfolio\\EduvisionMvc.csproj",
+        "projectPath": "c:\\Users\\manam\\Downloads\\EduVisionMVC-Portfolio\\EduvisionMvc.csproj",
         "packagesPath": "C:\\Users\\manam\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\manam\\Downloads\\EduVisionMVC-Portfolio\\obj\\",
+        "outputPath": "c:\\Users\\manam\\Downloads\\EduVisionMVC-Portfolio\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

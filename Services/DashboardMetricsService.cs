@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using EduvisionMvc.Data;
 using EduvisionMvc.Hubs;
+using EduvisionMvc.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
@@ -38,7 +39,16 @@ public class DashboardMetricsService : BackgroundService
                 var students = await db.Students.CountAsync(stoppingToken);
                 var courses = await db.Courses.CountAsync(stoppingToken);
                 var enrollments = await db.Enrollments.CountAsync(stoppingToken);
-                var completed = await db.Enrollments.CountAsync(e => e.Numeric_Grade != null, stoppingToken);
+                // Completed includes explicit Completed or ended courses or any with a grade
+                var nowUtc = DateTime.UtcNow;
+                var completed = await db.Enrollments
+                    .CountAsync(e =>
+                        e.Status == EnrollmentStatus.Completed
+                        || (e.Course != null && e.Course.EndDate != null && e.Course.EndDate < nowUtc)
+                        || e.Numeric_Grade != null,
+                        stoppingToken);
+                // Active = Fall 2025 term, Approved or Pending (regardless of grade presence desired by business? they prefer term-based; but keep no grade to avoid duplicates)
+                var active = await db.Enrollments.CountAsync(e => e.Term == "Fall 2025" && (e.Status == EnrollmentStatus.Approved || e.Status == EnrollmentStatus.Pending), stoppingToken);
                 var activeLastHour = await db.Enrollments.CountAsync(e => e.LastAccessDate != null && e.LastAccessDate >= lastHour, stoppingToken);
 
                 var avgGpa = await db.Students
@@ -56,7 +66,7 @@ public class DashboardMetricsService : BackgroundService
                 var payload = new
                 {
                     ts = now,
-                    totals = new { students, courses, enrollments, completed, activeLastHour, avgGpa },
+                    totals = new { students, courses, enrollments, completed, active, activeLastHour, avgGpa },
                     departments = deptBreakdown
                 };
 

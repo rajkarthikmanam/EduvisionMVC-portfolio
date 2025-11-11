@@ -29,7 +29,11 @@ public class Student
 
     // Academic metrics
     public decimal Gpa { get; set; }
-    public int TotalCredits { get; set; }
+    
+    // Total credits required for degree completion (e.g., 120)
+    [Range(6, int.MaxValue, ErrorMessage = "Required credits must be at least 6.")]
+    public int TotalCredits { get; set; } = 120;
+    
     public int Age { get; set; }
 
     // Navigation properties

@@ -9,7 +9,7 @@ using EduvisionMvc.Utilities;
 
 namespace EduvisionMvc.Controllers;
 
-[Authorize(Roles = "Instructor")]
+[Authorize(Roles = "Admin,Instructor")]
 public class InstructorDashboardController : Controller
 {
     private readonly AppDbContext _context;
@@ -23,8 +23,8 @@ public class InstructorDashboardController : Controller
 
     public async Task<IActionResult> Index()
     {
-    var user = await _userManager.GetUserAsync(User);
-    if (user == null) return Challenge();
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return Challenge();
 
         var instructor = await _context.Instructors
             .Include(i => i.Department)
@@ -34,155 +34,179 @@ public class InstructorDashboardController : Controller
                         .ThenInclude(e => e.Student)
             .FirstOrDefaultAsync(i => i.UserId == user!.Id);
 
-        if (instructor == null) return NotFound();
+        if (instructor == null)
+        {
+            if (User.IsInRole("Admin"))
+            {
+                TempData["Error"] = "No instructor profile linked. Open an instructor from the list to manage courses.";
+                return RedirectToAction("Index", "Instructors");
+            }
+            TempData["Error"] = "Instructor profile missing. Contact an administrator.";
+            return RedirectToAction("Index", "Home");
+        }
 
-    var currentTerm = AcademicTermHelper.GetCurrentTerm(DateTime.UtcNow);
-        var currentCourses = instructor.CourseInstructors
-            .Select(ci => ci.Course!)
-            .Where(c => c.Enrollments.Any(e => e.Term == currentTerm))
+        var currentTerm = AcademicTermHelper.GetCurrentTerm(DateTime.UtcNow);
+
+        // All assigned courses
+        var allInstructorCourses = instructor.CourseInstructors
+            .Select(ci => ci.Course)
+            .Where(c => c != null)
+            .Select(c => c!)
+            .Distinct()
             .ToList();
 
-        var pastCourses = instructor.CourseInstructors
-            .Select(ci => ci.Course!)
-            .Where(c => c.Enrollments.Any(e => e.Term != currentTerm))
+        // Current-term active courses: must have at least one enrollment in current term that isn't Dropped/Rejected
+        var currentCourses = allInstructorCourses
+            .Where(c => c.Enrollments.Any(e => e.Term == currentTerm && e.Status != EnrollmentStatus.Dropped && e.Status != EnrollmentStatus.Rejected))
+            .ToList();
+
+        // If none match (e.g., term just started), fall back to all assigned so dashboard isn't empty
+        if (!currentCourses.Any()) currentCourses = allInstructorCourses;
+
+        // Past courses: distinct courses with at least one graded enrollment from a previous term
+        var pastCourses = allInstructorCourses
+            .Where(c => c.Enrollments.Any(e => e.Term != currentTerm && e.Numeric_Grade.HasValue && e.Status != EnrollmentStatus.Dropped))
+            .Distinct()
+            .ToList();
+
+        // Pending enrollments count
+        var pendingCount = allInstructorCourses
+            .SelectMany(c => c.Enrollments)
+            .Count(e => e.Status == EnrollmentStatus.Pending && e.Term == currentTerm);
+
+        // Active student IDs (current term, valid statuses only)
+        var activeStudentIds = currentCourses
+            .SelectMany(c => c.Enrollments.Where(e => e.Term == currentTerm && e.Status != EnrollmentStatus.Dropped && e.Status != EnrollmentStatus.Rejected))
+            .Select(e => e.StudentId)
+            .Distinct()
             .ToList();
 
         var model = new InstructorDashboardViewModel
         {
-            Name = $"Dr. {instructor!.LastName}",
-            Department = instructor!.Department?.Name ?? "",
-            Email = instructor!.Email,
-            TotalCourses = instructor!.CourseInstructors.Count,
-            ActiveStudents = currentCourses
-                .SelectMany(c => c.Enrollments)
-                .Select(e => e.StudentId)
-                .Distinct()
-                .Count(),
-
-            // Course enrollment chart
+            InstructorId = instructor.Id,
+            Name = $"Dr. {instructor.LastName}",
+            Department = instructor.Department?.Name ?? "",
+            Email = instructor.Email,
+            TotalCourses = allInstructorCourses.Count,
+            ActiveStudents = activeStudentIds.Count,
+            PendingApprovalsCount = pendingCount,
             CourseLabels = currentCourses.Select(c => c.Code).ToList(),
             EnrollmentCounts = currentCourses
-                .Select(c => c.Enrollments.Count(e => e.Term == currentTerm))
+                .Select(c => c.Enrollments.Count(e => e.Term == currentTerm && e.Status != EnrollmentStatus.Dropped && e.Status != EnrollmentStatus.Rejected))
                 .ToList(),
-
-            // Grade distribution chart
-            GradeLabels = new() { "A", "B", "C", "D", "F" },
-            GradeDistribution = GetGradeDistribution(currentCourses
-                .SelectMany(c => c.Enrollments)
-                .Where(e => e.Term == currentTerm && e.Numeric_Grade.HasValue)
-                .Select(e => e.Numeric_Grade!.Value)),
-
-            // Polar Area Chart: Course grade comparison
-            CourseGradeComparison = currentCourses.Select((c, index) => new PolarChartData
-            {
-                CourseCode = c.Code,
-                AverageGrade = c.Enrollments
-                    .Where(e => e.Term == currentTerm && e.Numeric_Grade.HasValue)
-                    .Select(e => e.Numeric_Grade!.Value)
-                    .DefaultIfEmpty()
-                    .Average(),
-                StudentCount = c.Enrollments.Count(e => e.Term == currentTerm),
-                ColorHex = GetColorForIndex(index)
-            }).ToList(),
-
-            // Current courses with statistics
             CurrentCourses = currentCourses.Select(c => new CourseStatistics
             {
                 CourseId = c.Id,
                 Code = c.Code,
                 Title = c.Title,
                 Term = currentTerm,
-                EnrollmentCount = c.Enrollments.Count(e => e.Term == currentTerm),
+                EnrollmentCount = c.Enrollments.Count(e => e.Term == currentTerm && e.Status != EnrollmentStatus.Dropped && e.Status != EnrollmentStatus.Rejected),
+                Capacity = c.Capacity,
                 AverageGrade = c.Enrollments
-                    .Where(e => e.Term == currentTerm && e.Numeric_Grade.HasValue)
+                    .Where(e => e.Term == currentTerm && e.Numeric_Grade.HasValue && e.Status != EnrollmentStatus.Dropped && e.Status != EnrollmentStatus.Rejected)
                     .Select(e => e.Numeric_Grade!.Value)
                     .DefaultIfEmpty()
                     .Average(),
                 Credits = c.Credits,
-                Schedule = "MWF 10:00-10:50", // TODO: Add schedule to Course model
+                Schedule = c.Schedule ?? "TBA",
                 MaterialsCount = _context.CourseMaterials.Count(m => m.CourseId == c.Id)
             }).ToList(),
-
-            // Past courses history
             PastCourses = pastCourses.Select(c => new CourseHistory
             {
                 CourseId = c.Id,
                 Code = c.Code,
                 Title = c.Title,
-                Term = c.Enrollments.FirstOrDefault()?.Term ?? currentTerm,
-                TotalStudents = c.Enrollments.Count,
+                Term = c.Enrollments.Where(e => e.Numeric_Grade.HasValue && e.Term != currentTerm).Select(e => e.Term).FirstOrDefault() ?? currentTerm,
+                TotalStudents = c.Enrollments.Count(e => e.Numeric_Grade.HasValue && e.Status != EnrollmentStatus.Dropped),
                 AverageGrade = c.Enrollments
-                    .Where(e => e.Numeric_Grade.HasValue)
+                    .Where(e => e.Numeric_Grade.HasValue && e.Status != EnrollmentStatus.Dropped)
                     .Select(e => e.Numeric_Grade!.Value)
                     .DefaultIfEmpty()
                     .Average(),
-                PassRate = c.Enrollments
-                    .Count(e => e.Numeric_Grade >= 1.0m) * 100m / c.Enrollments.Count
+                PassRate = (c.Enrollments.Count(e => e.Numeric_Grade.HasValue && e.Status != EnrollmentStatus.Dropped) > 0)
+                    ? (c.Enrollments.Count(e => e.Numeric_Grade.HasValue && e.Numeric_Grade!.Value >= 1.0m && e.Status != EnrollmentStatus.Dropped) * 100m /
+                        c.Enrollments.Count(e => e.Numeric_Grade.HasValue && e.Status != EnrollmentStatus.Dropped))
+                    : 0m
             }).ToList(),
-
-            // Top performing students
-            TopStudents = currentCourses
-                .SelectMany(c => c.Enrollments
-                    .Where(e => e.Term == currentTerm)
-                    .Select(e => e.Student))
-                .Where(s => s != null)
-                .GroupBy(s => s!.Id)
-                .Select(g => new StudentPerformance
+            PendingApprovals = currentCourses
+                .SelectMany(c => c.Enrollments.Where(e => e.Status == EnrollmentStatus.Pending && e.Term == currentTerm))
+                .Select(e => new PendingEnrollment
                 {
-                    StudentId = g.Key,
-                    Name = g.First()!.Name,
-                    Major = g.First()!.Major,
-                    GradeAverage = g.First()!.Gpa,
-                    CoursesCompleted = g.First()!.Enrollments.Count(e => e.Numeric_Grade.HasValue),
-                    CompletedCourses = g.First()!.Enrollments
-                        .Where(e => e.Numeric_Grade.HasValue)
-                        .Select(e => e.Course!.Code)
-                        .ToList()
+                    EnrollmentId = e.Id,
+                    StudentId = e.StudentId,
+                    StudentName = e.Student!.Name,
+                    CourseCode = e.Course!.Code,
+                    CourseTitle = e.Course!.Title,
+                    Term = e.Term,
+                    EnrollDate = e.EnrolledDate
                 })
-                .OrderByDescending(s => s.GradeAverage)
-                .Take(5)
-                .ToList(),
-
-            // Recent notifications
-            RecentNotifications = await _context.Notifications
-                .Where(n => n.UserId == user.Id)
-                .OrderByDescending(n => n.CreatedAt)
-                .Take(5)
-                .ToListAsync(),
-
-            // Recent course materials
-            RecentMaterials = await _context.CourseMaterials
-                .Where(m => currentCourses.Select(c => c.Id).Contains(m.CourseId))
-                .OrderByDescending(m => m.UploadedDate)
-                .Take(5)
-                .ToListAsync()
+                .OrderBy(p => p.EnrollDate)
+                .ToList()
         };
 
         return View(model);
     }
 
-    private static List<int> GetGradeDistribution(IEnumerable<decimal> grades)
+    [HttpPost]
+    public async Task<IActionResult> ApproveEnrollment(int id)
     {
-        var distribution = new int[5]; // A, B, C, D, F
+        var enrollment = await _context.Enrollments
+            .Include(e => e.Course)
+            .FirstOrDefaultAsync(e => e.Id == id);
 
-        foreach (var grade in grades)
+        if (enrollment == null)
         {
-            if (grade >= 3.7m) distribution[0]++;      // A
-            else if (grade >= 2.7m) distribution[1]++; // B
-            else if (grade >= 1.7m) distribution[2]++; // C
-            else if (grade >= 0.7m) distribution[3]++; // D
-            else distribution[4]++;                     // F
+            return NotFound();
         }
 
-        return distribution.ToList();
+        // Verify instructor owns this course
+        var user = await _userManager.GetUserAsync(User);
+        var instructor = await _context.Instructors
+            .Include(i => i.CourseInstructors)
+            .FirstOrDefaultAsync(i => i.UserId == user!.Id);
+
+        if (instructor == null || !instructor.CourseInstructors.Any(ci => ci.CourseId == enrollment.CourseId))
+        {
+            TempData["Error"] = "You do not have permission to approve this enrollment.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        enrollment.Status = EnrollmentStatus.Approved;
+        enrollment.ApprovedDate = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        TempData["Success"] = "Enrollment approved successfully.";
+        return RedirectToAction(nameof(Index));
     }
 
-    private static string GetColorForIndex(int index)
+    [HttpPost]
+    public async Task<IActionResult> DeclineEnrollment(int id)
     {
-        var colors = new[] {
-            "#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF",
-            "#FF9F40", "#FF6384", "#C9CBCF", "#4BC0C0", "#FF6384"
-        };
-        return colors[index % colors.Length];
+        var enrollment = await _context.Enrollments
+            .Include(e => e.Course)
+            .FirstOrDefaultAsync(e => e.Id == id);
+
+        if (enrollment == null)
+        {
+            return NotFound();
+        }
+
+        // Verify instructor owns this course
+        var user = await _userManager.GetUserAsync(User);
+        var instructor = await _context.Instructors
+            .Include(i => i.CourseInstructors)
+            .FirstOrDefaultAsync(i => i.UserId == user!.Id);
+
+        if (instructor == null || !instructor.CourseInstructors.Any(ci => ci.CourseId == enrollment.CourseId))
+        {
+            TempData["Error"] = "You do not have permission to decline this enrollment.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        _context.Enrollments.Remove(enrollment);
+        await _context.SaveChangesAsync();
+
+        TempData["Success"] = "Enrollment declined and removed.";
+        return RedirectToAction(nameof(Index));
     }
 }

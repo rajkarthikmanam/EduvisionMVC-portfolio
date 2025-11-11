@@ -21,10 +21,24 @@ namespace EduvisionMvc.Controllers
             _context = context;
         }
 
+        private void PopulateDepartmentsSelectList(object? selected = null)
+        {
+            ViewBag.Departments = new SelectList(
+                _context.Departments.OrderBy(d => d.Name),
+                "Id", "Name", selected);
+        }
+
+        private void PopulateAdvisorsSelectList(object? selected = null)
+        {
+            ViewBag.Advisors = new SelectList(
+                _context.Instructors.OrderBy(i => i.LastName).Select(i => new { i.Id, FullName = i.FirstName + " " + i.LastName }),
+                "Id", "FullName", selected);
+        }
+
         // GET: Students
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Students.ToListAsync());
+            return View(await _context.Students.Include(s => s.Department).Include(s => s.AdvisorInstructor).ToListAsync());
         }
 
         // GET: Students/Details/5
@@ -36,6 +50,10 @@ namespace EduvisionMvc.Controllers
             }
 
             var student = await _context.Students
+                .Include(s => s.Department)
+                .Include(s => s.AdvisorInstructor)
+                .Include(s => s.Enrollments)
+                    .ThenInclude(e => e.Course)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (student == null)
             {
@@ -48,22 +66,59 @@ namespace EduvisionMvc.Controllers
         // GET: Students/Create
         public IActionResult Create()
         {
-            return View();
+            PopulateDepartmentsSelectList();
+            PopulateAdvisorsSelectList();
+            
+            // Set default values
+            var student = new Student
+            {
+                TotalCredits = 120, // Credits required for graduation
+                EnrollmentDate = DateTime.UtcNow
+            };
+            
+            return View(student);
         }
 
         // POST: Students/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Major,Age,Gpa")] Student student)
+        public async Task<IActionResult> Create([Bind("Id,Name,Email,Major,Age,Gpa,DepartmentId,AdvisorInstructorId,Phone,AcademicLevel,TotalCredits,EnrollmentDate")] Student student)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(student);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                // Auto-assign advisor from department if not selected
+                if (!student.AdvisorInstructorId.HasValue && student.DepartmentId.HasValue)
+                {
+                    var advisor = await _context.Instructors
+                        .Where(i => i.DepartmentId == student.DepartmentId.Value)
+                        .OrderBy(i => i.LastName)
+                        .FirstOrDefaultAsync();
+                    
+                    if (advisor != null)
+                    {
+                        student.AdvisorInstructorId = advisor.Id;
+                    }
+                }
+                
+                try
+                {
+                    _context.Add(student);
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Student created successfully!";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("UNIQUE constraint failed") == true || 
+                                                   ex.InnerException?.Message.Contains("duplicate") == true)
+                {
+                    TempData["Error"] = "Duplicate detected: A student with this email already exists.";
+                }
+                catch (DbUpdateException ex)
+                {
+                    TempData["Error"] = $"Error creating student: {ex.InnerException?.Message ?? ex.Message}";
+                }
             }
+            PopulateDepartmentsSelectList(student.DepartmentId);
+            PopulateAdvisorsSelectList(student.AdvisorInstructorId);
             return View(student);
         }
 
@@ -80,15 +135,15 @@ namespace EduvisionMvc.Controllers
             {
                 return NotFound();
             }
+            PopulateDepartmentsSelectList(student.DepartmentId);
+            PopulateAdvisorsSelectList(student.AdvisorInstructorId);
             return View(student);
         }
 
         // POST: Students/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Major,Age,Gpa")] Student student)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Email,Major,Age,Gpa,DepartmentId,AdvisorInstructorId,Phone,AcademicLevel,TotalCredits,EnrollmentDate")] Student student)
         {
             if (id != student.Id)
             {
@@ -99,8 +154,33 @@ namespace EduvisionMvc.Controllers
             {
                 try
                 {
+                    // Recalculate GPA based on enrollments
+                    var enrollments = await _context.Enrollments
+                        .Include(e => e.Course)
+                        .Where(e => e.StudentId == student.Id && e.Numeric_Grade.HasValue && e.Status != EnrollmentStatus.Dropped)
+                        .ToListAsync();
+                    
+                    if (enrollments.Any())
+                    {
+                        student.Gpa = enrollments.Average(e => e.Numeric_Grade!.Value);
+                    }
+                    
+                    // TotalCredits field represents credits REQUIRED (not completed)
+                    // Ensure it's at least 6
+                    if (student.TotalCredits < 6)
+                    {
+                        student.TotalCredits = 120; // Default required credits
+                    }
+                    
                     _context.Update(student);
                     await _context.SaveChangesAsync();
+                    TempData["Success"] = "Student updated successfully!";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("UNIQUE constraint failed") == true || 
+                                                   ex.InnerException?.Message.Contains("duplicate") == true)
+                {
+                    TempData["Error"] = "Duplicate detected: A student with this email already exists.";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -113,8 +193,13 @@ namespace EduvisionMvc.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                catch (DbUpdateException ex)
+                {
+                    TempData["Error"] = $"Error updating student: {ex.InnerException?.Message ?? ex.Message}";
+                }
             }
+            PopulateDepartmentsSelectList(student.DepartmentId);
+            PopulateAdvisorsSelectList(student.AdvisorInstructorId);
             return View(student);
         }
 
@@ -127,6 +212,8 @@ namespace EduvisionMvc.Controllers
             }
 
             var student = await _context.Students
+                .Include(s => s.Department)
+                .Include(s => s.AdvisorInstructor)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (student == null)
             {
@@ -141,13 +228,55 @@ namespace EduvisionMvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var student = await _context.Students.FindAsync(id);
-            if (student != null)
+            var student = await _context.Students
+                .Include(s => s.Enrollments)
+                    .ThenInclude(e => e.Course)
+                .Include(s => s.User)
+                .FirstOrDefaultAsync(s => s.Id == id);
+                
+            if (student == null)
             {
-                _context.Students.Remove(student);
+                TempData["Error"] = "Student not found.";
+                return RedirectToAction(nameof(Index));
             }
 
-            await _context.SaveChangesAsync();
+            // Check for truly active enrollments (no grade AND course hasn't ended yet)
+            var activeEnrollments = student.Enrollments
+                .Where(e => !e.Numeric_Grade.HasValue && 
+                           (e.Course == null || e.Course.EndDate == null || e.Course.EndDate > DateTime.UtcNow))
+                .ToList();
+            
+            if (activeEnrollments.Any())
+            {
+                TempData["Error"] = $"Cannot delete student '{student.Name}' because they have {activeEnrollments.Count} active enrollment(s) in courses that haven't ended yet.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            try
+            {
+                // Delete associated user account if exists
+                if (student.User != null)
+                {
+                    _context.Users.Remove(student.User);
+                }
+                
+                // Delete all enrollments
+                if (student.Enrollments.Any())
+                {
+                    _context.Enrollments.RemoveRange(student.Enrollments);
+                }
+                
+                // Delete the student
+                _context.Students.Remove(student);
+                await _context.SaveChangesAsync();
+                
+                TempData["Success"] = $"Student '{student.Name}' deleted successfully!";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error deleting student: {ex.InnerException?.Message ?? ex.Message}";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 

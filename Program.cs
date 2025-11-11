@@ -31,6 +31,10 @@ builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccessDenied";
+    options.SlidingExpiration = true;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 });
 
 builder.Services.AddControllersWithViews();
@@ -75,14 +79,16 @@ using (var scope = app.Services.CreateScope())
 }
 
 // --- Seed roles and admin user ---
+// ONLY seeds roles and the admin user - does NOT reseed domain data
 IdentitySeeder.SeedAsync(app.Services).GetAwaiter().GetResult();
 
 // --- Seed richer LMS domain data ---
-using (var scope2 = app.Services.CreateScope())
-{
-    var db2 = scope2.ServiceProvider.GetRequiredService<AppDbContext>();
-    LmsDataSeeder.SeedAsync(db2).GetAwaiter().GetResult();
-}
+// DISABLED: Uncomment only for initial setup, otherwise data gets reset on every restart
+// using (var scope2 = app.Services.CreateScope())
+// {
+//     var db2 = scope2.ServiceProvider.GetRequiredService<AppDbContext>();
+//     LmsDataSeeder.SeedAsync(db2).GetAwaiter().GetResult();
+// }
 
 // --- Middleware ---
 if (!app.Environment.IsDevelopment())

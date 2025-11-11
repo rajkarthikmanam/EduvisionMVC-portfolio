@@ -31,6 +31,7 @@ public class StudentCoursesController : Controller
 
         var currentTerm = GetCurrentTerm();
 
+        // Get enrolled course IDs (no need to check for Dropped since they're deleted)
         var enrolledCourseIds = await _db.Enrollments
             .Where(e => e.StudentId == student.Id && e.Term == currentTerm)
             .Select(e => e.CourseId)
@@ -65,43 +66,83 @@ public class StudentCoursesController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Enroll(int courseId)
     {
+        Console.WriteLine($"[ENROLL] Starting enrollment for courseId: {courseId}");
+        
         var user = await _userManager.GetUserAsync(User);
-        if (user == null) return Challenge();
+        if (user == null)
+        {
+            Console.WriteLine("[ENROLL] User not found - returning Challenge");
+            return Challenge();
+        }
+        
         var student = await _db.Students.FirstOrDefaultAsync(s => s.UserId == user.Id);
-        if (student == null) return RedirectToAction("Index", "StudentDashboard");
+        if (student == null)
+        {
+            Console.WriteLine("[ENROLL] Student profile not found");
+            return RedirectToAction("Index", "StudentDashboard");
+        }
+        
+        Console.WriteLine($"[ENROLL] Student found: {student.Name} (ID: {student.Id})");
 
         var course = await _db.Courses.FirstOrDefaultAsync(c => c.Id == courseId);
-        if (course == null) return NotFound();
+        if (course == null)
+        {
+            Console.WriteLine("[ENROLL] Course not found");
+            return NotFound();
+        }
+        
+        Console.WriteLine($"[ENROLL] Course found: {course.Code} - {course.Title}");
 
         var term = GetCurrentTerm();
+        Console.WriteLine($"[ENROLL] Current term: {term}");
 
-        // Prevent duplicate enrollment
-        var exists = await _db.Enrollments.AnyAsync(e => e.StudentId == student.Id && e.CourseId == courseId && e.Term == term);
-        if (exists)
+        // Check if enrollment exists for this student, course, and term
+        var existingEnrollment = await _db.Enrollments.FirstOrDefaultAsync(e => 
+            e.StudentId == student.Id 
+            && e.CourseId == courseId 
+            && e.Term == term);
+
+        if (existingEnrollment != null)
         {
+            Console.WriteLine("[ENROLL] Already enrolled");
             TempData["EnrollMessage"] = $"Already enrolled in {course.Code} for {term}.";
             return RedirectToAction("Index");
         }
 
-        // Capacity check
+        // Capacity check for new enrollment
         var currentCount = await _db.Enrollments.CountAsync(e => e.CourseId == courseId && e.Term == term && (e.Status == EnrollmentStatus.Approved || e.Status == EnrollmentStatus.Completed));
+        Console.WriteLine($"[ENROLL] Current enrollment count: {currentCount}, Capacity: {course.Capacity}");
         if (currentCount >= course.Capacity)
         {
+            Console.WriteLine("[ENROLL] Course is full");
             TempData["EnrollMessage"] = $"Course {course.Code} is full.";
             return RedirectToAction("Index");
         }
 
-        _db.Enrollments.Add(new Enrollment
+        // Determine initial status based on whether course requires approval
+        var initialStatus = course.RequiresApproval ? EnrollmentStatus.Pending : EnrollmentStatus.Approved;
+        Console.WriteLine($"[ENROLL] Course RequiresApproval: {course.RequiresApproval}, Initial Status: {initialStatus}");
+
+        // Create new enrollment
+        var newEnrollment = new Enrollment
         {
             StudentId = student.Id,
             CourseId = courseId,
             Term = term,
-            Status = EnrollmentStatus.Approved,
-            Numeric_Grade = null
-        });
+            Status = initialStatus,
+            Numeric_Grade = null,
+            EnrolledDate = DateTime.UtcNow
+        };
+        
+        _db.Enrollments.Add(newEnrollment);
         await _db.SaveChangesAsync();
+        
+        Console.WriteLine($"[ENROLL] SUCCESS - Enrolled student {student.Id} in course {courseId}");
 
-        TempData["EnrollMessage"] = $"Enrolled in {course.Code}.";
+        var message = course.RequiresApproval 
+            ? $"Enrollment in {course.Code} is pending instructor approval."
+            : $"Successfully enrolled in {course.Code}!";
+        TempData["EnrollMessage"] = message;
         return RedirectToAction("Index", "StudentDashboard");
     }
 
@@ -124,8 +165,8 @@ public class StudentCoursesController : Controller
             return RedirectToAction("Index", "StudentDashboard");
         }
 
-        enrollment.Status = EnrollmentStatus.Dropped;
-        enrollment.DroppedDate = DateTime.UtcNow;
+        // Delete the enrollment instead of marking as dropped
+        _db.Enrollments.Remove(enrollment);
         await _db.SaveChangesAsync();
         TempData["EnrollMessage"] = $"Dropped {enrollment.Course?.Code ?? enrollment.CourseId.ToString()} successfully.";
         return RedirectToAction("Index", "StudentDashboard");

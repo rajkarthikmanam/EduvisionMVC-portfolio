@@ -55,41 +55,28 @@ public static class IdentitySeeder
             await userMgr.AddToRoleAsync(admin, "Admin");
         }
 
-        // Create demo instructors for all departments
-        var instructorAccounts = new[]
+        // Create ONLY the core demo instructor account if it's missing
+        var demoInstructorEmail = "instructor@local.test";
+        var inst = await userMgr.FindByEmailAsync(demoInstructorEmail);
+        if (inst == null)
         {
-            new { Email = "instructor@local.test", FirstName = "Demo", LastName = "Instructor", Password = "Instructor123!" },
-            new { Email = "math.prof@local.test", FirstName = "Sarah", LastName = "Johnson", Password = "Math123!" },
-            new { Email = "eng.prof@local.test", FirstName = "Michael", LastName = "Chen", Password = "Eng123!" },
-            new { Email = "bus.prof@local.test", FirstName = "Amanda", LastName = "Rodriguez", Password = "Bus123!" }
-        };
-
-        var createdInstructors = new List<ApplicationUser>();
-        foreach (var instructorData in instructorAccounts)
-        {
-            var instUser = await userMgr.FindByEmailAsync(instructorData.Email);
-            if (instUser == null)
+            inst = new ApplicationUser
             {
-                instUser = new ApplicationUser
-                {
-                    UserName = instructorData.Email,
-                    Email = instructorData.Email,
-                    EmailConfirmed = true,
-                    FirstName = instructorData.FirstName,
-                    LastName = instructorData.LastName,
-                    CreatedAt = DateTime.UtcNow
-                };
-                await userMgr.CreateAsync(instUser, instructorData.Password);
-            }
-            if (!await userMgr.IsInRoleAsync(instUser, "Instructor"))
-            {
-                await userMgr.AddToRoleAsync(instUser, "Instructor");
-            }
-            createdInstructors.Add(instUser);
+                UserName = demoInstructorEmail,
+                Email = demoInstructorEmail,
+                EmailConfirmed = true,
+                FirstName = "Demo",
+                LastName = "Instructor",
+                CreatedAt = DateTime.UtcNow
+            };
+            await userMgr.CreateAsync(inst, "Instructor123!");
         }
-        var inst = createdInstructors[0]; // Keep reference to first instructor for backward compatibility
+        if (!await userMgr.IsInRoleAsync(inst, "Instructor"))
+        {
+            await userMgr.AddToRoleAsync(inst, "Instructor");
+        }
 
-        // Optionally create a demo student
+        // Create ONLY the core demo student account if it's missing
         var studentEmail = "student@local.test";
         var stu = await userMgr.FindByEmailAsync(studentEmail);
         if (stu == null)
@@ -103,7 +90,7 @@ public static class IdentitySeeder
                 LastName = "Student",
                 CreatedAt = DateTime.UtcNow
             };
-            var cr = await userMgr.CreateAsync(stu, "Student123!");
+            await userMgr.CreateAsync(stu, "Student123!");
         }
         if (!await userMgr.IsInRoleAsync(stu, "Student"))
         {
@@ -111,7 +98,15 @@ public static class IdentitySeeder
         }
 
         // --- Domain seed to link identities to LMS entities ---
-        // Ensure a default Department
+        // ONLY create if database is completely empty (first-time setup)
+        // Skip if there's already data to preserve user changes
+        if (db.Departments.Any() || db.Students.Any() || db.Courses.Any())
+        {
+            // Data already exists - don't reseed to preserve user changes
+            return;
+        }
+
+        // First-time setup only: Ensure a default Department
         var dept = db.Departments.FirstOrDefault(d => d.Name == "Computer Science");
         if (dept == null)
         {
