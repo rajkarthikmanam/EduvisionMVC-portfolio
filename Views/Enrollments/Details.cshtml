@@ -10,18 +10,6 @@
     <h4>Enrollment</h4>
     <hr />
     <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Term)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Term)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Numeric_Grade)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Numeric_Grade)
-        </dd>
         <dt class = "col-sm-2">Student</dt>
         <dd class = "col-sm-10">
             @(Model.Student != null ? Model.Student.Name : "-")
@@ -29,6 +17,24 @@
         <dt class = "col-sm-2">Course</dt>
         <dd class = "col-sm-10">
             @(Model.Course != null ? ($"{Model.Course.Code} - {Model.Course.Title}") : "-")
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Term)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Term)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Status)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Status)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Numeric_Grade)
+        </dt>
+        <dd class = "col-sm-10">
+            @(Model.Numeric_Grade.HasValue ? Model.Numeric_Grade.Value.ToString("F2") : "-")
         </dd>
     </dl>
 </div>

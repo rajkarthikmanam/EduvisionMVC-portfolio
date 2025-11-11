@@ -6,8 +6,24 @@
 
 <h1>Enrollments</h1>
 
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create" class="btn btn-primary">Create New Enrollment</a>
 </p>
 
 
@@ -18,6 +34,7 @@
             <th>Course</th>
             <th>Instructors</th>
             <th>Term</th>
+            <th>Status</th>
             <th>Numeric Grade</th>
             <th></th>
         </tr>
@@ -30,11 +47,26 @@
                           ? $"{ci.Instructor.FirstName} {ci.Instructor.LastName}".Trim()
                           : "")
                       .Where(s => !string.IsNullOrWhiteSpace(s));
+    
+    // Determine if course has ended
+    var courseEnded = e.Course?.EndDate != null && e.Course.EndDate < DateTime.UtcNow;
+    var statusBadge = e.Status switch
+    {
+        EduvisionMvc.Models.EnrollmentStatus.Pending => "badge bg-warning text-dark",
+        EduvisionMvc.Models.EnrollmentStatus.Approved => "badge bg-primary",
+        EduvisionMvc.Models.EnrollmentStatus.Completed => "badge bg-success",
+        EduvisionMvc.Models.EnrollmentStatus.Dropped => "badge bg-secondary",
+        EduvisionMvc.Models.EnrollmentStatus.Rejected => "badge bg-danger",
+        _ => "badge bg-secondary"
+    };
+    var statusText = e.Status.ToString();
+    
     <tr>
         <td>@e.Student?.Name</td>
         <td>@e.Course?.Title</td>
         <td>@string.Join(", ", instructors)</td>
         <td>@e.Term</td>
+        <td><span class="@statusBadge">@statusText</span></td>
         <td>@e.Numeric_Grade</td>
         <td>
             <a asp-action="Edit" asp-route-id="@e.Id">Edit</a> |

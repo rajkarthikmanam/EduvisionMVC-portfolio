@@ -4,25 +4,86 @@
 }
 <h1>Create Enrollment</h1>
 <form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    
     <div class="mb-3">
-        <label asp-for="StudentId" class="form-label"></label>
-        <select asp-for="StudentId" class="form-select" asp-items="ViewBag.StudentId"></select>
+        <label asp-for="StudentId" class="form-label fw-bold">Student</label>
+        <select asp-for="StudentId" class="form-select" asp-items="ViewBag.StudentId">
+            <option value="">-- Select Student --</option>
+        </select>
         <span asp-validation-for="StudentId" class="text-danger"></span>
     </div>
+    
     <div class="mb-3">
-        <label asp-for="CourseId" class="form-label"></label>
-        <select asp-for="CourseId" class="form-select" asp-items="ViewBag.CourseId"></select>
+        <label asp-for="CourseId" class="form-label fw-bold">Course</label>
+        <select asp-for="CourseId" class="form-select" asp-items="ViewBag.CourseId">
+            <option value="">-- Select Course --</option>
+        </select>
         <span asp-validation-for="CourseId" class="text-danger"></span>
     </div>
+    
     <div class="mb-3">
-        <label asp-for="Term" class="form-label"></label>
-        <input asp-for="Term" class="form-control" />
+        <label asp-for="Term" class="form-label fw-bold">Term</label>
+        <select asp-for="Term" class="form-control" id="termSelect">
+            <option value="">-- Select Term --</option>
+            <option value="Spring 2025">Spring 2025 (Past - Requires Grade)</option>
+            <option value="Summer 2025">Summer 2025 (Past - Requires Grade)</option>
+            <option value="Fall 2025" selected>Fall 2025 (Active - No Grade)</option>
+        </select>
+        <span asp-validation-for="Term" class="text-danger"></span>
     </div>
-    <div class="mb-3">
-        <label asp-for="Numeric_Grade" class="form-label"></label>
-        <input asp-for="Numeric_Grade" class="form-control" />
+    
+    <div class="mb-3" id="statusGroup">
+        <label asp-for="Status" class="form-label fw-bold">Status</label>
+        <select asp-for="Status" class="form-control" id="statusSelect">
+            <option value="0">Pending</option>
+            <option value="1" selected>Approved</option>
+            <option value="4">Completed</option>
+        </select>
+        <span asp-validation-for="Status" class="text-danger"></span>
+        <small class="form-text text-muted">
+            Fall 2025: Pending/Approved (active). Spring/Summer 2025: Completed (with grade).
+        </small>
     </div>
+    
+    <div class="mb-3" id="gradeGroup">
+        <label asp-for="Numeric_Grade" class="form-label fw-bold">Grade (0.0 - 4.0)</label>
+        <input asp-for="Numeric_Grade" class="form-control" type="number" step="0.01" min="0" max="4" id="gradeInput" placeholder="Leave empty for Fall 2025" />
+        <span asp-validation-for="Numeric_Grade" class="text-danger"></span>
+        <small class="form-text text-muted">
+            <strong>Fall 2025:</strong> Leave empty (active course). 
+            <strong>Spring/Summer 2025:</strong> Enter grade or default 3.5 will be used.
+        </small>
+    </div>
+    
     <button class="btn btn-primary">Save</button>
     <a asp-action="Index" class="btn btn-link">Cancel</a>
 </form>
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+
+@section Scripts { 
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Auto-adjust status and grade based on selected term
+        document.getElementById('termSelect').addEventListener('change', function() {
+            const term = this.value;
+            const statusSelect = document.getElementById('statusSelect');
+            const gradeInput = document.getElementById('gradeInput');
+            
+            if (term === 'Fall 2025') {
+                // Active term: Approved status, no grade
+                statusSelect.value = '1'; // Approved
+                gradeInput.value = '';
+                gradeInput.placeholder = 'Leave empty for active course';
+            } else if (term === 'Spring 2025' || term === 'Summer 2025') {
+                // Past term: Completed status, default grade
+                statusSelect.value = '4'; // Completed
+                if (!gradeInput.value) {
+                    gradeInput.value = '3.5';
+                }
+                gradeInput.placeholder = 'Default: 3.5';
+            }
+        });
+    </script>
+}
+

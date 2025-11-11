@@ -1,102 +1,173 @@
 @model EduvisionMvc.ViewModels.AdminDashboardViewModel
 @{
-    ViewData["Title"] = "Admin Dashboard";
+    ViewData["Title"] = "Admin Dashboard - Academic Management";
 }
 
-<div class="container py-4">
+<div class="container-fluid py-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 d-flex align-items-center"><i class="fas fa-gauge-high me-2"></i> Admin Dashboard</h1>
-    <small class="text-muted" id="liveStamp">live</small>
+    <h1 class="h3 d-flex align-items-center">
+      <i class="fas fa-gauge-high me-2 text-primary"></i> 
+      Academic Management Dashboard
+    </h1>
+    <div class="d-flex align-items-center gap-3">
+      <span class="badge bg-primary">Admin</span>
+      <small class="text-muted" id="liveStamp">live</small>
+    </div>
   </div>
 
+  <!-- Overview Cards - Primary Metrics -->
   <div class="row g-3 mb-4" id="live-kpis-1">
-    <div class="col-md-3"><div class="card p-3"><div class="text-muted">Users</div><div class="h3">@Model.TotalUsers</div></div></div>
-    <div class="col-md-3"><div class="card p-3"><div class="text-muted">Students</div><div class="h3">@Model.TotalStudents</div></div></div>
-    <div class="col-md-3"><div class="card p-3"><div class="text-muted">Instructors</div><div class="h3">@Model.TotalInstructors</div></div></div>
-    <div class="col-md-3"><div class="card p-3"><div class="text-muted">Courses</div><div class="h3">@Model.TotalCourses</div></div></div>
+    <div class="col-lg-3 col-md-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="text-muted mb-1 small">Total Students</p>
+              <h3 class="mb-0 fw-bold text-primary">@Model.TotalStudents</h3>
+            </div>
+            <div class="bg-primary bg-opacity-10 p-3 rounded">
+              <i class="fas fa-user-graduate fa-2x text-primary"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="text-muted mb-1 small">Total Courses</p>
+              <h3 class="mb-0 fw-bold text-success">@Model.TotalCourses</h3>
+            </div>
+            <div class="bg-success bg-opacity-10 p-3 rounded">
+              <i class="fas fa-book fa-2x text-success"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="text-muted mb-1 small">Active Enrollments</p>
+              <h3 class="mb-0 fw-bold text-info">@Model.ActiveEnrollments</h3>
+            </div>
+            <div class="bg-info bg-opacity-10 p-3 rounded">
+              <i class="fas fa-clipboard-list fa-2x text-info"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <p class="text-muted mb-1 small">Total Instructors</p>
+              <h3 class="mb-0 fw-bold text-warning">@Model.TotalInstructors</h3>
+            </div>
+            <div class="bg-warning bg-opacity-10 p-3 rounded">
+              <i class="fas fa-chalkboard-teacher fa-2x text-warning"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="row g-3 mb-4" id="live-kpis-2">
-    <div class="col-md-4"><div class="card p-3"><div class="text-muted">Active Enrollments</div><div class="h4">@Model.ActiveEnrollments</div></div></div>
-    <div class="col-md-4"><div class="card p-3"><div class="text-muted">Average GPA</div><div class="h4">@Model.AverageGpa</div></div></div>
-    <div class="col-md-4"><div class="card p-3"><div class="text-muted">Pending Approvals</div><div class="h4">@Model.PendingApprovals</div></div></div>
+  <!-- Charts Section - 2 Column Responsive Grid -->
+  <div class="row g-3 mb-4">
+    <!-- Enrollment Trend by Term (Line Chart) -->
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white border-0 py-3">
+          <h5 class="mb-0"><i class="fas fa-chart-line me-2 text-primary"></i>Enrollment Trend by Term</h5>
+        </div>
+        <div class="card-body">
+          <canvas id="enrollmentTrendChart" height="300"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Department Distribution (Pie Chart) -->
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white border-0 py-3">
+          <h5 class="mb-0"><i class="fas fa-chart-pie me-2 text-success"></i>Department Distribution</h5>
+        </div>
+        <div class="card-body">
+          <canvas id="departmentPieChart" height="300"></canvas>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="row g-3 mb-4" id="live-kpis-3">
-    <div class="col-md-4"><div class="card p-3"><div class="text-muted">Materials</div><div class="h4">@Model.MaterialsCount</div></div></div>
-    <div class="col-md-4"><div class="card p-3"><div class="text-muted">Discussions</div><div class="h4">@Model.DiscussionsCount</div></div></div>
-    <div class="col-md-4"><div class="card p-3"><div class="text-muted">Assignments</div><div class="h4">@Model.AssignmentsCount</div></div></div>
+  <!-- Second Row of Charts -->
+  <div class="row g-3 mb-4">
+    <!-- Course Capacity Usage (Bar Chart) -->
+    <div class="col-lg-12">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white border-0 py-3">
+          <h5 class="mb-0"><i class="fas fa-chart-bar me-2 text-info"></i>Course Capacity Usage</h5>
+        </div>
+        <div class="card-body">
+          <canvas id="courseCapacityChart" height="250"></canvas>
+        </div>
+      </div>
+    </div>
   </div>
 
+  <!-- Additional Tables -->
   <div class="row g-3">
-    <div class="col-md-6">
-      <div class="card">
-        <div class="card-header">Role Distribution</div>
-        <div class="card-body">
-          <ul class="list-group">
-            @foreach (var rc in Model.RoleDistribution)
-            {
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>@rc.Role</span>
-                <span class="badge bg-primary rounded-pill">@rc.Count</span>
-              </li>
-            }
-          </ul>
+    <div class="col-lg-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 py-3">
+          <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2 text-danger"></i>Capacity Alerts (≥ 80%)</h5>
         </div>
-      </div>
-    </div>
-    <div class="col-md-6">
-      <div class="card">
-        <div class="card-header">Recent Notifications</div>
-        <div class="card-body">
-          <ul class="list-group">
-            @foreach (var n in Model.RecentNotifications)
-            {
-              <li class="list-group-item">
-                <div class="d-flex justify-content-between">
-                  <strong>@n.UserEmail</strong>
-                  <small class="text-muted">@n.CreatedAt.ToString("g")</small>
-                </div>
-                <div>@n.Message</div>
-              </li>
-            }
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="row g-3 mt-3">
-    <div class="col-md-6">
-      <div class="card">
-        <div class="card-header">Capacity Alerts (>= 80%)</div>
         <div class="card-body">
           <div class="table-responsive">
-            <table class="table table-sm">
-              <thead><tr><th>Code</th><th>Title</th><th>Capacity</th><th>Current</th><th>Utilization</th></tr></thead>
+            <table class="table table-sm table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Code</th>
+                  <th>Title</th>
+                  <th>Capacity</th>
+                  <th>Current</th>
+                  <th>Usage</th>
+                </tr>
+              </thead>
               <tbody>
               @foreach (var c in Model.CapacityAlerts)
               {
                 var util = c.Capacity == 0 ? 0 : (int)(c.Current * 100.0 / c.Capacity);
                 <tr>
-                  <td>@c.Code</td>
-                  <td>@c.Title</td>
+                  <td><span class="badge bg-secondary">@c.Code</span></td>
+                  <td>@(string.IsNullOrWhiteSpace(c.Title) ? c.Code : c.Title)</td>
                   <td>@c.Capacity</td>
                   <td>@c.Current</td>
-                  <td>@util%</td>
+                  <td>
+                    <span class="badge @(util >= 90 ? "bg-danger" : "bg-warning")">
+                      @util%
+                    </span>
+                  </td>
+                </tr>
+              }
+              @if (!Model.CapacityAlerts.Any())
+              {
+                <tr>
+                  <td colspan="5" class="text-center text-muted">No capacity alerts</td>
                 </tr>
               }
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6">
-      <div class="card">
-        <div class="card-header">Course Capacity Analysis</div>
-        <div class="card-body">
-          <canvas id="scatterChart" height="300"></canvas>
         </div>
       </div>
     </div>
@@ -106,101 +177,222 @@
 @section Scripts {
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script>
-    const scatterData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CourseCapacityData.Select(d => new {
-        x = d.X,
-        y = d.Y,
-        label = d.CourseCode,
-        utilization = d.UtilizationRate
-    })));
+    // Chart.js default configuration
+    Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
+    Chart.defaults.color = '#6c757d';
 
-  const ctx = document.getElementById('scatterChart').getContext('2d');
-  const scatterChart = new Chart(ctx, {
-      type: 'scatter',
-      data: {
-        datasets: [{
-          label: 'Courses (Capacity vs Enrollment)',
-          data: scatterData.map(d => ({ x: d.x, y: d.y })),
-          backgroundColor: scatterData.map(d => {
-            // Color code by utilization: green (<50%), yellow (50-80%), red (>80%)
-            if (d.utilization < 50) return 'rgba(75, 192, 192, 0.6)';
-            if (d.utilization < 80) return 'rgba(255, 206, 86, 0.6)';
-            return 'rgba(255, 99, 132, 0.6)';
-          }),
-          borderColor: scatterData.map(d => {
-            if (d.utilization < 50) return 'rgba(75, 192, 192, 1)';
-            if (d.utilization < 80) return 'rgba(255, 206, 86, 1)';
-            return 'rgba(255, 99, 132, 1)';
-          }),
-          borderWidth: 2,
-          pointRadius: 8,
-          pointHoverRadius: 10
+    // 1. Enrollment Trend by Term (Line Chart)
+    const enrollmentTrendCtx = document.getElementById('enrollmentTrendChart').getContext('2d');
+    const enrollmentTrendChart = new Chart(enrollmentTrendCtx, {
+      type: 'line',
+      data: { labels: [], datasets: [{
+          label: 'Total Enrollments',
+          data: [],
+          borderColor: '#0d6efd',
+          backgroundColor: 'rgba(13, 110, 253, 0.1)',
+          tension: 0.4,
+          fill: true,
+          pointBackgroundColor: '#0d6efd',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 5,
+          pointHoverRadius: 7
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
+          legend: { display: true, position: 'top' },
+          tooltip: { mode: 'index', intersect: false }
+        },
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: 'Number of Enrollments' } },
+          x: { title: { display: true, text: 'Academic Term' } }
+        }
+      }
+    });
+
+    async function refreshEnrollmentTrend(){
+      try {
+        const res = await fetch('/api/dashboard/admin/trend');
+        if(!res.ok) return;
+        const json = await res.json();
+        enrollmentTrendChart.data.labels = json.labels;
+        enrollmentTrendChart.data.datasets[0].data = json.data;
+        enrollmentTrendChart.update();
+      } catch(err){ console.warn('Trend update failed', err); }
+    }
+    refreshEnrollmentTrend();
+
+    // 2. Department Distribution (Pie Chart)
+    const departmentPieCtx = document.getElementById('departmentPieChart').getContext('2d');
+    const departmentPieChart = new Chart(departmentPieCtx, {
+      type: 'pie',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Courses by Department',
+          data: [],
+          backgroundColor: [
+            '#0d6efd',
+            '#198754',
+            '#ffc107',
+            '#dc3545',
+            '#6f42c1',
+            '#20c997',
+            '#0dcaf0',
+            '#fd7e14'
+          ],
+          borderColor: '#fff',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'right',
+          },
           tooltip: {
             callbacks: {
               label: function(context) {
-                const point = scatterData[context.dataIndex];
-                return `${point.label}: ${point.y}/${point.x} (${point.utilization}%)`;
+                const label = context.label || '';
+                const value = context.parsed || 0;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = ((value / total) * 100).toFixed(1);
+                return `${label}: ${value} courses (${percentage}%)`;
               }
             }
-          },
-          legend: {
-            display: true,
-            position: 'top'
-          }
-        },
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: 'Course Capacity'
-            },
-            beginAtZero: true
-          },
-          y: {
-            title: {
-              display: true,
-              text: 'Current Enrollment'
-            },
-            beginAtZero: true
           }
         }
       }
     });
+
+    // 3. Course Capacity Usage (Bar Chart)
+    const courseCapacityCtx = document.getElementById('courseCapacityChart').getContext('2d');
+    const courseCapacityChart = new Chart(courseCapacityCtx, {
+      type: 'bar',
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: 'Current Enrollment',
+            data: [],
+            backgroundColor: '#0d6efd',
+            borderRadius: 5
+          },
+          {
+            label: 'Total Capacity',
+            data: [],
+            backgroundColor: '#e9ecef',
+            borderRadius: 5
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+          },
+          tooltip: {
+            callbacks: {
+              afterLabel: function(context) { return ''; }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Students'
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'Course Code'
+            }
+          }
+        }
+      }
+    });
+
+    // Real-time updates
+    async function refreshDepartmentPie(){
+      try{
+        const res = await fetch('/api/dashboard/admin/departments');
+        if(!res.ok) return;
+        const json = await res.json();
+        departmentPieChart.data.labels = json.map(d=>d.dept);
+        departmentPieChart.data.datasets[0].data = json.map(d=>d.count);
+        departmentPieChart.update();
+      }catch(err){ console.warn('Dept pie update failed', err); }
+    }
+    async function refreshCapacity(){
+      try{
+        const res = await fetch('/api/dashboard/admin/capacity');
+        if(!res.ok) return;
+        const json = await res.json();
+        courseCapacityChart.data.labels = json.labels;
+        courseCapacityChart.data.datasets[0].data = json.current;
+        courseCapacityChart.data.datasets[1].data = json.capacity;
+        courseCapacityChart.update();
+        // capacity alerts table
+        const tbody = document.querySelector('table tbody');
+        if (tbody){
+          tbody.innerHTML = '';
+          if (json.alerts && json.alerts.length){
+            json.alerts.forEach(a=>{
+              const util = a.util;
+              const displayTitle = a.title && a.title.trim() ? a.title : a.code;
+              tbody.insertAdjacentHTML('beforeend', `
+                <tr>
+                  <td><span class="badge bg-secondary">${a.code}</span></td>
+                  <td>${displayTitle}</td>
+                  <td>${a.capacity}</td>
+                  <td>${a.current}</td>
+                  <td><span class="badge ${util>=90? 'bg-danger':'bg-warning'}">${util}%</span></td>
+                </tr>`);
+            });
+          } else {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No capacity alerts</td></tr>';
+          }
+        }
+      }catch(err){ console.warn('Capacity update failed', err); }
+    }
+
     function applyRealTime(payload){
       if(!payload || !payload.totals) return;
       document.getElementById('liveStamp').textContent = new Date(payload.ts).toLocaleTimeString();
+      
       // Update KPI numbers if they exist
-      const map = {
-        'Users': payload.totals.users,
-        'Students': payload.totals.students,
-        'Instructors': payload.totals.instructors,
-        'Courses': payload.totals.courses
+      const kpiMap = {
+        'Total Students': payload.totals.students,
+        'Total Courses': payload.totals.courses,
+        'Active Enrollments': payload.totals.active,
+        'Total Instructors': payload.totals.instructors
       };
-      for (const [k,v] of Object.entries(map)){
+      
+      for (const [k,v] of Object.entries(kpiMap)){
         const el = [...document.querySelectorAll('#live-kpis-1 .card')].find(c=>c.innerText.includes(k));
-        if (el) el.querySelector('.h3')?.replaceChildren(document.createTextNode(v));
-      }
-      // Enrollment / completion (second row)
-      const active = payload.totals.enrollments - payload.totals.completed;
-      const second = {
-        'Active Enrollments': active,
-        'Average GPA': (payload.totals.avgGpa||0).toFixed(2)
-      };
-      for (const [k,v] of Object.entries(second)){
-        const el = [...document.querySelectorAll('#live-kpis-2 .card')].find(c=>c.innerText.includes(k));
-        if (el) el.querySelector('.h4')?.replaceChildren(document.createTextNode(v));
-      }
-      // Rebuild scatter if departments changed (approximation)
-      if (payload.departments){
-        // Optionally we could request fresh capacity data via API for accuracy later
+        if (el) {
+          const h3 = el.querySelector('h3');
+          if (h3) h3.textContent = v;
+        }
       }
     }
-    document.addEventListener('eduv:metrics', e=>applyRealTime(e.detail));
+    
+  document.addEventListener('eduv:metrics', e=>{ applyRealTime(e.detail); refreshEnrollmentTrend(); refreshDepartmentPie(); refreshCapacity(); });
+  // Initial loads
+  refreshEnrollmentTrend();
+  refreshDepartmentPie();
+  refreshCapacity();
   </script>
 }
-

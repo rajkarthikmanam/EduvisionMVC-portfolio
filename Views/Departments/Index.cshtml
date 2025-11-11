@@ -6,8 +6,24 @@
 
 <h1>Departments</h1>
 
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create" class="btn btn-primary">Create New Department</a>
 </p>
 <table class="table table-striped table-sm">
     <thead>
@@ -18,7 +34,6 @@
             <th>
                 @Html.DisplayNameFor(model => model.Name)
             </th>
-            <th>Chair</th>
             <th>Phone</th>
             <th>Email</th>
             <th>Website</th>
@@ -34,7 +49,6 @@
             <td>
                 @Html.DisplayFor(modelItem => item.Name)
             </td>
-            <td>@(item.Chair != null ? item.Chair.LastName : "-")</td>
             <td>@(item.Phone ?? "-")</td>
             <td>@(item.Email ?? "-")</td>
             <td>
