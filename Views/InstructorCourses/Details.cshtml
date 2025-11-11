@@ -1,172 +1,440 @@
 @model EduvisionMvc.Models.Course
 @{
-    ViewData["Title"] = Model.Code + " Details";
+    ViewData["Title"] = $"{Model.Code} - Course Details";
 }
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>@Model.Code - @Model.Title</h2>
-        <span class="badge bg-secondary">@Model.Credits credits</span>
-    </div>
-    <p class="text-muted">Department: @Model.Department?.Name</p>
-    <p>@Model.Description</p>
-
-    @* Enrollments with Progress Tracking *@
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-light">
-            <strong><i class="bi bi-people-fill"></i> Student Enrollments</strong>
+<div class="container-fluid py-4">
+    <!-- Course Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h2 class="mb-0">@Model.Code</h2>
+                            <h4 class="text-muted mb-3">@Model.Title</h4>
+                            <p class="mb-2"><i class="fas fa-building"></i> <strong>Department:</strong> @Model.Department?.Name</p>
+                            <p class="mb-2"><i class="fas fa-calendar"></i> <strong>Schedule:</strong> @(Model.Schedule ?? "Not set")</p>
+                            <p class="mb-2"><i class="fas fa-map-marker-alt"></i> <strong>Location:</strong> @(Model.Location ?? "Not set")</p>
+                        </div>
+                        <div class="text-end">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Courses
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            @if (!Model.Enrollments?.Any() ?? true)
-            {
-                <div class="text-muted">No students enrolled yet.</div>
-            }
-            else
-            {
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Student</th>
-                                <th>Progress</th>
-                                <th>Hours</th>
-                                <th>Last Active</th>
-                                <th>Grade</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var enr in Model.Enrollments!)
-                            {
-                                <tr>
-                                    <td>@enr.Student?.Name</td>
-                                    <td>
-                                        <div class="progress" style="width: 120px;">
-                                            <div class="progress-bar bg-success" role="progressbar" 
-                                                 style="width: @(enr.ProgressPercentage)%;" 
-                                                 aria-valuenow="@enr.ProgressPercentage" 
-                                                 aria-valuemin="0" 
-                                                 aria-valuemax="100">
-                                                @(enr.ProgressPercentage)%
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>@enr.TotalHoursSpent h</td>
-                                    <td>
-                                        @if (enr.LastAccessDate.HasValue)
+    </div>
+
+    <!-- Course Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Students Enrolled</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.CurrentEnrollments / @Model.Capacity</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Average Grade</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@(ViewBag.AverageGrade > 0 ? ViewBag.AverageGrade.ToString("F2") : "N/A")</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Credits</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Credits</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-award fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Materials</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@(Model.Materials?.Count ?? 0)</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-file-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs for Students, Materials, Grades, Assignments, Announcements -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="courseTab" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="students-tab" data-bs-toggle="tab" href="#students" role="tab">
+                                <i class="fas fa-users"></i> Students
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="materials-tab" data-bs-toggle="tab" href="#materials" role="tab">
+                                <i class="fas fa-file-alt"></i> Materials
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="grades-tab" data-bs-toggle="tab" href="#grades" role="tab">
+                                <i class="fas fa-chart-bar"></i> Grades
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="assignments-tab" data-bs-toggle="tab" href="#assignments" role="tab">
+                                <i class="fas fa-tasks"></i> Assignments
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="announcements-tab" data-bs-toggle="tab" href="#announcements" role="tab">
+                                <i class="fas fa-bullhorn"></i> Announcements
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="courseTabContent">
+                        <!-- Students Tab -->
+                        <div class="tab-pane fade show active" id="students" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Student Name</th>
+                                            <th>Email</th>
+                                            <th>Major</th>
+                                            <th>Progress</th>
+                                            <th>Hours</th>
+                                            <th>Current Grade</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (Model.Enrollments != null && Model.Enrollments.Any(e => e.Status == EnrollmentStatus.Approved))
                                         {
-                                            var diff = DateTime.UtcNow - enr.LastAccessDate.Value;
-                                            if (diff.TotalHours < 1) { <span class="text-success">Just now</span> }
-                                            else if (diff.TotalHours < 24) { <span class="text-muted">@diff.Hours h ago</span> }
-                                            else { <span class="text-muted">@diff.Days d ago</span> }
+                                            @foreach (var enrollment in Model.Enrollments.Where(e => e.Status == EnrollmentStatus.Approved))
+                                            {
+                                                <tr>
+                                                    <td>@(enrollment.Student?.Name ?? "Unknown")</td>
+                                                    <td>@(enrollment.Student?.Email ?? "-")</td>
+                                                    <td>@(enrollment.Student?.Major ?? "-")</td>
+                                                    <td>
+                                                        <div class="progress" style="width: 100px;">
+                                                            <div class="progress-bar bg-success" role="progressbar" 
+                                                                 style="width: @(enrollment.ProgressPercentage)%;" 
+                                                                 aria-valuenow="@enrollment.ProgressPercentage" 
+                                                                 aria-valuemin="0" 
+                                                                 aria-valuemax="100">
+                                                                @(enrollment.ProgressPercentage)%
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>@enrollment.TotalHoursSpent h</td>
+                                                    <td>
+                                                        @if (enrollment.Numeric_Grade.HasValue)
+                                                        {
+                                                            <span class="badge bg-primary">@enrollment.LetterGrade (@enrollment.Numeric_Grade?.ToString("F2"))</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-secondary">Not Graded</span>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-success">@enrollment.Status</span>
+                                                    </td>
+                                                    <td>
+                                                        <a asp-controller="Enrollments" asp-action="Edit" asp-route-id="@enrollment.Id" class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-edit"></i> Grade
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            }
                                         }
                                         else
                                         {
-                                            <span class="text-muted">Never</span>
+                                            <tr>
+                                                <td colspan="8" class="text-center text-muted">No students enrolled yet.</td>
+                                            </tr>
                                         }
-                                    </td>
-                                    <td>@(enr.LetterGrade ?? "—")</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
-        </div>
-    </div>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
 
-    <div class="row g-4">
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light">
-                    <strong>Materials</strong>
-                </div>
-                <div class="card-body">
-                    @if (!Model.Materials?.Any() ?? true)
-                    {
-                        <div class="text-muted">No materials yet.</div>
-                    }
-                    else
-                    {
-                        <ul class="list-group list-group-flush">
-                            @foreach (var m in Model.Materials!)
+                        <!-- Materials Tab -->
+                        <div class="tab-pane fade" id="materials" role="tabpanel">
+                            <div class="mb-3">
+                                <button class="btn btn-primary" onclick="alert('Material upload feature coming soon!')">
+                                    <i class="fas fa-plus"></i> Upload Material
+                                </button>
+                            </div>
+                            @if (Model.Materials != null && Model.Materials.Any())
                             {
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span>
-                                        @m.Title
-                                        @if (!m.IsPublished)
-                                        {
-                                            <span class="badge bg-warning text-dark ms-2">Draft</span>
-                                        }
-                                    </span>
-                                    @if (!string.IsNullOrWhiteSpace(m.Url))
-                                    {
-                                        <a href="@m.Url" target="_blank" class="btn btn-sm btn-outline-primary">Open</a>
-                                    }
-                                </li>
-                            }
-                        </ul>
-                    }
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light">
-                    <strong>Assignments</strong>
-                </div>
-                <div class="card-body">
-                    @if (!Model.Assignments?.Any() ?? true)
-                    {
-                        <div class="text-muted">No assignments yet.</div>
-                    }
-                    else
-                    {
-                        <ul class="list-group list-group-flush">
-                            @foreach (var a in Model.Assignments!)
-                            {
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <div class="fw-bold">
-                                            @a.Title
-                                            @if (!a.IsPublished)
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Title</th>
+                                                <th>Type</th>
+                                                <th>Uploaded</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var m in Model.Materials)
                                             {
-                                                <span class="badge bg-warning text-dark ms-2">Draft</span>
+                                                <tr>
+                                                    <td>@m.Title</td>
+                                                    <td><span class="badge bg-info">@m.Type</span></td>
+                                                    <td>@m.UploadedDate.ToString("MMM dd, yyyy")</td>
+                                                    <td>
+                                                        @if (m.IsPublished)
+                                                        {
+                                                            <span class="badge bg-success">Published</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-warning">Draft</span>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        @if (!string.IsNullOrWhiteSpace(m.Url))
+                                                        {
+                                                            <a href="@m.Url" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                                <i class="fas fa-external-link-alt"></i> View
+                                                            </a>
+                                                        }
+                                                    </td>
+                                                </tr>
                                             }
-                                        </div>
-                                        <small class="text-muted">Due: @(a.DueDate?.ToString("MMM dd, yyyy") ?? "—")</small>
-                                    </div>
-                                    <span class="badge bg-secondary">@a.MaxPoints pts</span>
-                                </li>
+                                        </tbody>
+                                    </table>
+                                </div>
                             }
-                        </ul>
-                    }
-                </div>
-            </div>
-        </div>
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light">
-                    <strong>Announcements</strong>
-                </div>
-                <div class="card-body">
-                    @if (!Model.Announcements?.Any() ?? true)
-                    {
-                        <div class="text-muted">No announcements yet.</div>
-                    }
-                    else
-                    {
-                        <ul class="list-group list-group-flush">
-                            @foreach (var an in Model.Announcements!)
+                            else
                             {
-                                <li class="list-group-item">
-                                    <div class="fw-bold">@an.Title</div>
-                                    <div>@an.Content</div>
-                                    <small class="text-muted">@an.CreatedAt.ToString("MMM dd, yyyy HH:mm")</small>
-                                </li>
+                                <p class="text-muted">No materials uploaded yet.</p>
                             }
-                        </ul>
-                    }
+                        </div>
+
+                        <!-- Grades Tab -->
+                        <div class="tab-pane fade" id="grades" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5>Grade Distribution</h5>
+                                    <canvas id="gradeDistributionChart" style="max-height: 300px;"></canvas>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5>Grade Statistics</h5>
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <tbody>
+                                                <tr>
+                                                    <th>Average Grade:</th>
+                                                    <td>@(ViewBag.AverageGrade > 0 ? ViewBag.AverageGrade.ToString("F2") : "N/A")</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Total Graded:</th>
+                                                    <td>@(Model.Enrollments?.Count(e => e.Numeric_Grade.HasValue) ?? 0)</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Not Graded:</th>
+                                                    <td>@(Model.Enrollments?.Count(e => !e.Numeric_Grade.HasValue && e.Status == EnrollmentStatus.Approved) ?? 0)</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Total Enrolled:</th>
+                                                    <td>@ViewBag.CurrentEnrollments</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Assignments Tab -->
+                        <div class="tab-pane fade" id="assignments" role="tabpanel">
+                            <div class="mb-3">
+                                <button class="btn btn-primary" onclick="alert('Assignment creation feature coming soon!')">
+                                    <i class="fas fa-plus"></i> Create Assignment
+                                </button>
+                            </div>
+                            @if (Model.Assignments != null && Model.Assignments.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Title</th>
+                                                <th>Due Date</th>
+                                                <th>Max Points</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var a in Model.Assignments)
+                                            {
+                                                <tr>
+                                                    <td>@a.Title</td>
+                                                    <td>@(a.DueDate?.ToString("MMM dd, yyyy") ?? "No due date")</td>
+                                                    <td><span class="badge bg-primary">@a.MaxPoints pts</span></td>
+                                                    <td>
+                                                        @if (a.IsPublished)
+                                                        {
+                                                            <span class="badge bg-success">Published</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-warning">Draft</span>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary" onclick="alert('Edit feature coming soon!')">
+                                                            <i class="fas fa-edit"></i> Edit
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted">No assignments created yet.</p>
+                            }
+                        </div>
+
+                        <!-- Announcements Tab -->
+                        <div class="tab-pane fade" id="announcements" role="tabpanel">
+                            <div class="mb-3">
+                                <button class="btn btn-primary" onclick="alert('Announcement creation feature coming soon!')">
+                                    <i class="fas fa-plus"></i> Create Announcement
+                                </button>
+                            </div>
+                            @if (Model.Announcements != null && Model.Announcements.Any())
+                            {
+                                <div class="list-group">
+                                    @foreach (var an in Model.Announcements)
+                                    {
+                                        <div class="list-group-item">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h5 class="mb-1">@an.Title</h5>
+                                                <small>@an.CreatedAt.ToString("MMM dd, yyyy HH:mm")</small>
+                                            </div>
+                                            <p class="mb-1">@an.Content</p>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted">No announcements posted yet.</p>
+                            }
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Grade Distribution Chart
+            const gradeCtx = document.getElementById('gradeDistributionChart');
+            if (gradeCtx) {
+                const grades = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                    (Model.Enrollments ?? new List<EduvisionMvc.Models.Enrollment>())
+                        .Where(e => e.LetterGrade != null)
+                        .GroupBy(e => e.LetterGrade!)
+                        .OrderBy(g => g.Key)
+                        .Select(g => g.Key)
+                        .ToList()
+                ));
+                const counts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                    (Model.Enrollments ?? new List<EduvisionMvc.Models.Enrollment>())
+                        .Where(e => e.LetterGrade != null)
+                        .GroupBy(e => e.LetterGrade!)
+                        .OrderBy(g => g.Key)
+                        .Select(g => g.Count())
+                        .ToList()
+                ));
+                
+                new Chart(gradeCtx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: grades,
+                        datasets: [{
+                            label: 'Number of Students',
+                            data: counts,
+                            backgroundColor: [
+                                'rgba(40, 167, 69, 0.7)',   // Green for A
+                                'rgba(23, 162, 184, 0.7)',  // Cyan for B
+                                'rgba(255, 193, 7, 0.7)',   // Yellow for C
+                                'rgba(253, 126, 20, 0.7)',  // Orange for D
+                                'rgba(220, 53, 69, 0.7)'    // Red for F
+                            ],
+                            borderColor: 'rgba(200, 200, 200, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { stepSize: 1 }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}

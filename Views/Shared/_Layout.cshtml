@@ -54,10 +54,22 @@
       color: var(--text);
     }
     
+    .navbar {
+      position: relative;
+      z-index: 1050;
+    }
+    
     .dropdown-menu {
       background: var(--panel);
       border: 1px solid rgba(255,255,255,.08);
       box-shadow: var(--shadow);
+      z-index: 1051;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    
+    .dropdown:hover .dropdown-menu {
+      display: block;
     }
     
     .dropdown-item {
@@ -90,12 +102,15 @@
 
   <div id="mainNav" class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
           <ul class="navbar-nav flex-grow-1">
-            <li class="nav-item">
-              <a class="nav-link d-flex align-items-center" asp-controller="Home" asp-action="Index">
-                <i class="fas fa-home me-1"></i> Home
-              </a>
-            </li>
-            @if (User.IsInRole("Admin"))
+            @if (!(User?.Identity?.IsAuthenticated ?? false))
+            {
+              <li class="nav-item">
+                <a class="nav-link d-flex align-items-center" asp-controller="Home" asp-action="Index">
+                  <i class="fas fa-home me-1"></i> Home
+                </a>
+              </li>
+            }
+            @if ((User?.Identity?.IsAuthenticated ?? false) && User!.IsInRole("Admin"))
             {
               <li class="nav-item">
                 <a class="nav-link d-flex align-items-center" asp-controller="AdminDashboard" asp-action="Index">
@@ -104,7 +119,7 @@
               </li>
             }
             @* Analytics removed per request *@
-            @if (User.IsInRole("Admin"))
+            @if ((User?.Identity?.IsAuthenticated ?? false) && User!.IsInRole("Admin"))
             {
               @* Keep only Admin Dashboard; remove duplicate Admin menu *@
               
@@ -146,7 +161,7 @@
 
             <li class="nav-item">
               <a class="nav-link d-flex align-items-center" asp-controller="Pages" asp-action="Api">
-                <i class="fas fa-code me-1"></i> API
+                <i class="fas fa-book me-1"></i> Book Finder
               </a>
             </li>
 
@@ -160,75 +175,17 @@
           <ul class="navbar-nav ms-auto align-items-center">
             @if (User?.Identity?.IsAuthenticated ?? false)
             {
-              <!-- Notification Dropdown -->
-              <li class="nav-item dropdown me-3">
-                <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  <i class="fas fa-bell fs-5"></i>
-                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                    3
-                    <span class="visually-hidden">unread notifications</span>
-                  </span>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end" style="min-width: 320px; max-height: 400px; overflow-y: auto;">
-                  <li class="dropdown-header d-flex justify-content-between align-items-center">
-                    <span class="fw-bold">Notifications</span>
-                    <a href="#" class="text-primary small text-decoration-none">Mark all as read</a>
-                  </li>
-                  <li><hr class="dropdown-divider" /></li>
-                  <!-- Sample notifications - replace with real data -->
-                  <li>
-                    <a class="dropdown-item py-2" href="#">
-                      <div class="d-flex">
-                        <i class="bi bi-info-circle text-primary me-2 mt-1"></i>
-                        <div class="flex-grow-1">
-                          <div class="small fw-semibold">New course material uploaded</div>
-                          <div class="text-muted" style="font-size: 0.75rem;">2 hours ago</div>
-                        </div>
-                      </div>
-                    </a>
-                  </li>
-                  <li>
-                    <a class="dropdown-item py-2" href="#">
-                      <div class="d-flex">
-                        <i class="bi bi-clipboard-check text-success me-2 mt-1"></i>
-                        <div class="flex-grow-1">
-                          <div class="small fw-semibold">Assignment graded</div>
-                          <div class="text-muted" style="font-size: 0.75rem;">5 hours ago</div>
-                        </div>
-                      </div>
-                    </a>
-                  </li>
-                  <li>
-                    <a class="dropdown-item py-2" href="#">
-                      <div class="d-flex">
-                        <i class="bi bi-megaphone text-warning me-2 mt-1"></i>
-                        <div class="flex-grow-1">
-                          <div class="small fw-semibold">Course announcement posted</div>
-                          <div class="text-muted" style="font-size: 0.75rem;">1 day ago</div>
-                        </div>
-                      </div>
-                    </a>
-                  </li>
-                  <li><hr class="dropdown-divider" /></li>
-                  <li>
-                    <a class="dropdown-item text-center small text-primary" href="#">
-                      View all notifications
-                    </a>
-                  </li>
-                </ul>
-              </li>
-
               <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
                   <i class="fas fa-user-circle me-2"></i> @User.Identity!.Name
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
-                  @if (User.IsInRole("Student"))
+                  @if ((User?.Identity?.IsAuthenticated ?? false) && User!.IsInRole("Student"))
                   {
                     <li><a class="dropdown-item" asp-controller="StudentDashboard" asp-action="Index">Student Dashboard</a></li>
                     <li><a class="dropdown-item" asp-controller="StudentCourses" asp-action="Index">Enroll in Courses</a></li>
                   }
-                  @if (User.IsInRole("Instructor"))
+                  @if ((User?.Identity?.IsAuthenticated ?? false) && User!.IsInRole("Instructor"))
                   {
                     <li><a class="dropdown-item" asp-controller="InstructorDashboard" asp-action="Index">Instructor Dashboard</a></li>
                   }
@@ -262,7 +219,7 @@
   </header>
 
   <div class="container-fluid px-0">
-    <main role="main" class="pb-3">
+    <main role="main" class="pb-3" style="margin-top: 20px;">
       @RenderBody()
     </main>
   </div>

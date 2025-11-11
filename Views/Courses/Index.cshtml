@@ -6,8 +6,24 @@
 
 <h1>Courses</h1>
 
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create" class="btn btn-primary">Create New Course</a>
 </p>
 <table class="table">
     <thead>
@@ -18,6 +34,7 @@
             <th>@Html.DisplayNameFor(model => model.Level)</th>
             <th>@Html.DisplayNameFor(model => model.DeliveryMode)</th>
             <th>Department</th>
+            <th>Instructor(s)</th>
             <th></th>
         </tr>
     </thead>
@@ -30,6 +47,16 @@
             <td>@item.Level</td>
             <td>@item.DeliveryMode</td>
             <td>@(item.Department != null ? item.Department.Name : "-")</td>
+            <td>
+                @if (item.CourseInstructors.Any())
+                {
+                    @string.Join(", ", item.CourseInstructors.Select(ci => ci.Instructor?.DisplayName ?? "Unknown"))
+                }
+                else
+                {
+                    <span class="text-muted">No instructor assigned</span>
+                }
+            </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a> |

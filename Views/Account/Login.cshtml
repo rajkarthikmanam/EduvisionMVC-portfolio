@@ -23,7 +23,9 @@
                     <h3 class="mb-0"><i class="bi bi-box-arrow-in-right"></i> Sign In</h3>
                 </div>
                 <div class="card-body">
-                    <form method="post" asp-action="Login">
+                    <form method="post" asp-action="Login" asp-antiforgery="true">
+                        @* Anti-forgery token required because action has [ValidateAntiForgeryToken]; was missing causing silent 400 + staying on login page *@
+                        @Html.AntiForgeryToken()
                         <div asp-validation-summary="All" class="text-danger mb-3"></div>
                         
                         <div class="mb-3">

@@ -6,43 +6,133 @@
 <div class="container-fluid py-4">
     @if (TempData["EnrollMessage"] != null)
     {
-        <div class="alert alert-info">@TempData["EnrollMessage"]</div>
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            @TempData["EnrollMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     }
-    <!-- Hero Section -->
-    <div class="bg-primary text-white p-4 rounded mb-4">
-        <div class="row">
-            <div class="col-md-8">
-                <h1 class="display-4">Welcome, @Model.Name!</h1>
-                <p class="lead">
-                    Major: @Model.Major | Overall GPA: @Model.Gpa.ToString("F2")
-                    @if (!string.IsNullOrWhiteSpace(Model.AcademicLevel))
-                    {
-                        @: | Level: @Model.AcademicLevel
-                    }
-                    @if (!string.IsNullOrWhiteSpace(Model.AdvisorName))
-                    {
-                        @: | Advisor: @Model.AdvisorName
-                    }
-                </p>
-                <a asp-controller="StudentCourses" asp-action="Index" class="btn btn-warning btn-sm mt-2">
-                    <i class="bi bi-journal-plus"></i> Enroll in Courses
-                </a>
-            </div>
-            <div class="col-md-4 text-end">
-                <div class="h3">Credits Progress</div>
-                <div class="progress" style="height: 25px;">
-                    <div class="progress-bar" role="progressbar" 
-                         style="width: @Model.CompletionPercentage%;" 
-                         aria-valuenow="@Model.CompletionPercentage" 
-                         aria-valuemin="0" 
-                         aria-valuemax="100">
-                        @Model.TotalCredits / @Model.RequiredCredits Credits
+    
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">Student Dashboard</h2>
+            <p class="text-muted mb-0">Welcome back, @Model.Name</p>
+        </div>
+        <div class="text-muted">
+            <i class="fas fa-user-graduate"></i> @Model.Major | GPA: @(Model.CompletedCoursesCount > 0 ? Model.Gpa.ToString("F2") : "0.00")
+        </div>
+    </div>
+
+    <!-- Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Courses Enrolled</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.CurrentCourses.Count</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-book-open fa-2x text-gray-300"></i>
+                        </div>
                     </div>
                 </div>
-                <small class="text-light">@Model.CreditsInProgress credits in progress</small>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Credits Earned</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalCredits</div>
+                            <div class="progress mt-2" style="height: 4px;">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: @Model.CompletionPercentage%;" 
+                                     aria-valuenow="@Model.CompletionPercentage" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                </div>
+                            </div>
+                            <small class="text-muted">@Model.RequiredCredits required</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending Approvals</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.PendingCourses.Count</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Completed Courses</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.CompletedCoursesCount</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Pending Courses Section -->
+    @if (Model.PendingCourses.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-warning">
+                        <h5 class="card-title mb-0"><i class="bi bi-clock-history"></i> Pending Approval (@Model.PendingCourses.Count)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @foreach (var course in Model.PendingCourses)
+                            {
+                                <div class="col-md-4 mb-3">
+                                    <div class="course-card p-3 border border-warning rounded shadow-sm h-100">
+                                        <h6 class="fw-bold">@course.CourseCode - @course.CourseTitle</h6>
+                                        <p class="mb-1"><i class="bi bi-person"></i> @course.InstructorName</p>
+                                        <small class="text-muted"><i class="bi bi-building"></i> @course.Department</small>
+                                        <div class="mt-2">
+                                            <small class="badge bg-warning text-dark">@course.Credits credits</small>
+                                            <small class="badge bg-secondary">@course.Term</small>
+                                        </div>
+                                        <div class="alert alert-warning mt-3 mb-0 py-2" role="alert">
+                                            <i class="bi bi-hourglass-split"></i> Awaiting instructor approval
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 
     <!-- Current Courses Section - Moved to Top -->
     <div class="row mb-4">
@@ -99,33 +189,30 @@
 
     <!-- Charts Row -->
     <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">Grade Distribution</h5>
+        <!-- Enrollment History Chart -->
+        <div class="col-lg-7 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-line"></i> Enrollment History
+                    </h6>
                 </div>
                 <div class="card-body">
-                    <canvas id="gradeChart"></canvas>
+                    <canvas id="enrollmentHistoryChart" style="max-height: 300px;"></canvas>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">Course Performance</h5>
+
+        <!-- Progress by Term Chart -->
+        <div class="col-lg-5 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-success">
+                        <i class="fas fa-chart-pie"></i> Progress by Term
+                    </h6>
                 </div>
                 <div class="card-body">
-                    <canvas id="performanceChart"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">Subject Competencies</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="radarChart"></canvas>
+                    <canvas id="progressByTermChart" style="max-height: 300px;"></canvas>
                 </div>
             </div>
         </div>
@@ -159,179 +246,293 @@
                     <h5 class="card-title mb-0">Areas for Improvement</h5>
                 </div>
                 <div class="card-body">
-                    @foreach (var course in Model.WeakCourses)
+                    @if (Model.WeakCourses.Any())
                     {
-                        <div class="course-card mb-3">
-                            <h6>@course.CourseCode - @course.CourseTitle</h6>
-                            <p class="mb-1">Grade: @course.Grade?.ToString("F2") | @course.Term</p>
-                            <small class="text-muted">@course.Credits credits | @course.Department</small>
-                        </div>
+                        @foreach (var course in Model.WeakCourses)
+                        {
+                            <div class="course-card mb-3">
+                                <h6>@course.CourseCode - @course.CourseTitle</h6>
+                                <p class="mb-1">Grade: @course.Grade?.ToString("F2") | @course.Term</p>
+                                <small class="text-muted">@course.Credits credits | @course.Department</small>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">Great work! No weak areas identified yet.</p>
                     }
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Notifications Section -->
-    @if (Model.RecentNotifications.Any())
+    <!-- Past Courses Section -->
+    @if (Model.CompletedCourses.Any())
     {
         <div class="row mt-4">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title">Recent Notifications</h5>
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0"><i class="bi bi-journal-check"></i> Past Courses (@Model.CompletedCourses.Count)</h5>
                     </div>
                     <div class="card-body">
-                        <div class="list-group">
-                            @foreach (var notification in Model.RecentNotifications)
-                            {
-                                <div class="list-group-item @(notification.IsRead ? "" : "list-group-item-info")">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1">@notification.Message</h6>
-                                        <small>@notification.CreatedAt.ToString("MMM dd, yyyy")</small>
-                                    </div>
-                                </div>
-                            }
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Course Code</th>
+                                        <th>Title</th>
+                                        <th>Credits</th>
+                                        <th>Grade</th>
+                                        <th>Term</th>
+                                        <th>Instructor</th>
+                                        <th>Department</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var course in Model.CompletedCourses)
+                                    {
+                                        var gradeClass = course.Grade >= 3.7m ? "text-success fw-bold" :
+                                                        course.Grade >= 2.7m ? "text-primary" :
+                                                        course.Grade >= 1.7m ? "text-warning" : "text-danger";
+                                        <tr>
+                                            <td><strong>@course.CourseCode</strong></td>
+                                            <td>@course.CourseTitle</td>
+                                            <td>@course.Credits</td>
+                                            <td class="@gradeClass">@course.Grade?.ToString("F2")</td>
+                                            <td>@course.Term</td>
+                                            <td>@course.InstructorName</td>
+                                            <td><span class="badge bg-secondary">@course.Department</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     }
+
 </div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+    let enrollmentHistoryChart, progressByTermChart;
+    
     document.addEventListener('DOMContentLoaded', function () {
         // Listen for real-time metrics from SignalR hub (dispatched by _Layout)
         document.addEventListener('eduv:metrics', function(e) {
             console.log('[Student Dashboard] Live metrics:', e.detail);
-            // Update GPA display if available
-            const gpaEl = document.querySelector('.lead');
-            if (gpaEl && e.detail.avgGpa) {
-                // Optionally update system-wide avg or leave as-is (student-specific)
+            const metrics = e.detail;
+            
+            // Update charts if needed
+            if (enrollmentHistoryChart && metrics.totalEnrollments) {
+                console.log('Enrollment history could refresh with:', metrics);
             }
         });
 
-        // Grade Distribution Chart
-        const gradeCtx = document.getElementById('gradeChart').getContext('2d');
-        new Chart(gradeCtx, {
-            type: 'bar',
+        // Chart 1: Enrollment History (Line Chart)
+        const enrollmentHistoryCtx = document.getElementById('enrollmentHistoryChart').getContext('2d');
+        
+        // Use the CourseLabels (terms) and CoursePerformance (enrollment counts) from the model
+        const terms = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CourseLabels));
+        const courseCounts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CoursePerformance));
+        
+        // Calculate credits per term from all enrollments
+        @{
+            var creditsByTerm = (Model.AllEnrollments ?? new List<Enrollment>())
+                .Where(e => e.Course != null)
+                .GroupBy(e => e.Term)
+                .OrderBy(g => g.Key == "Spring 2025" ? 1 : g.Key == "Summer 2025" ? 2 : 3)
+                .Select(g => new { Term = g.Key, Credits = g.Sum(e => e.Course!.Credits) })
+                .ToList();
+        }
+        const allEnrollments = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(creditsByTerm));
+        const credits = allEnrollments.map(t => t.credits || 0);
+        
+        enrollmentHistoryChart = new Chart(enrollmentHistoryCtx, {
+            type: 'line',
             data: {
-                labels: @Json.Serialize(Model.GradeLabels),
+                labels: terms,
                 datasets: [{
-                    label: 'Number of Courses',
-                    data: @Json.Serialize(Model.GradeData),
-                    backgroundColor: [
-                        'rgba(40, 167, 69, 0.7)',   // Green for A
-                        'rgba(23, 162, 184, 0.7)',  // Cyan for B
-                        'rgba(255, 193, 7, 0.7)',   // Yellow for C
-                        'rgba(253, 126, 20, 0.7)',  // Orange for D
-                        'rgba(220, 53, 69, 0.7)'    // Red for F
-                    ],
-                    borderColor: 'rgba(200, 200, 200, 1)',
-                    borderWidth: 1
+                    label: 'Courses Enrolled',
+                    data: courseCounts,
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    yAxisID: 'y'
+                }, {
+                    label: 'Credits',
+                    data: credits,
+                    borderColor: 'rgba(40, 167, 69, 1)',
+                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointBackgroundColor: 'rgba(40, 167, 69, 1)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    yAxisID: 'y1'
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += context.parsed.y;
+                                return label;
+                            }
+                        }
+                    }
+                },
                 scales: {
                     y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
                         beginAtZero: true,
                         ticks: {
                             stepSize: 1
+                        },
+                        title: {
+                            display: true,
+                            text: 'Number of Courses'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        beginAtZero: true,
+                        grid: {
+                            drawOnChartArea: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Credits'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Term'
                         }
                     }
                 }
             }
         });
 
-        // Course Performance Chart
-        const perfCtx = document.getElementById('performanceChart').getContext('2d');
-        new Chart(perfCtx, {
-            type: 'line',
+        // Chart 2: Progress by Term (Donut Chart)
+        const progressByTermCtx = document.getElementById('progressByTermChart').getContext('2d');
+        
+        // Calculate credits: completed vs in progress vs remaining
+        const completedCredits = @Model.TotalCredits;
+        const inProgressCredits = @Model.CreditsInProgress;
+        const requiredCredits = @Model.RequiredCredits;
+        const remainingCredits = Math.max(0, requiredCredits - completedCredits - inProgressCredits);
+        
+    progressByTermChart = new Chart(progressByTermCtx, {
+            type: 'doughnut',
             data: {
-                labels: @Json.Serialize(Model.CourseLabels),
+                labels: ['Completed', 'In Progress', 'Remaining'],
                 datasets: [{
-                    label: 'Grade',
-                    data: @Json.Serialize(Model.CoursePerformance),
-                    borderColor: 'rgba(0, 123, 255, 1)',
-                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                    tension: 0.4,
-                    fill: true
+                    data: [completedCredits, inProgressCredits, remainingCredits],
+                    backgroundColor: [
+                        'rgba(40, 167, 69, 0.8)',   // Green for completed
+                        'rgba(255, 193, 7, 0.8)',   // Yellow for in progress
+                        'rgba(220, 53, 69, 0.8)'    // Red for remaining
+                    ],
+                    borderColor: [
+                        'rgba(40, 167, 69, 1)',
+                        'rgba(255, 193, 7, 1)',
+                        'rgba(220, 53, 69, 1)'
+                    ],
+                    borderWidth: 2
                 }]
             },
             options: {
                 responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 4.0,
-                        ticks: {
-                            stepSize: 0.5
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed;
+                                const total = requiredCredits;
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return label + ': ' + value + ' credits (' + percentage + '%)';
+                            }
                         }
                     }
                 }
             }
         });
 
-        // Radar Chart - Subject Competencies
-        @if (Model.SkillRadarData != null)
-        {
-            @:const radarData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SkillRadarData));
-            @:const radarCtx = document.getElementById('radarChart').getContext('2d');
-            @:new Chart(radarCtx, {
-            @:    type: 'radar',
-            @:    data: {
-            @:        labels: radarData.labels,
-            @:        datasets: [{
-            @:            label: radarData.datasetLabel,
-            @:            data: radarData.values,
-            @:            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-            @:            borderColor: 'rgba(54, 162, 235, 1)',
-            @:            borderWidth: 2,
-            @:            pointBackgroundColor: 'rgba(54, 162, 235, 1)',
-            @:            pointBorderColor: '#fff',
-            @:            pointHoverBackgroundColor: '#fff',
-            @:            pointHoverBorderColor: 'rgba(54, 162, 235, 1)',
-            @:            pointRadius: 5,
-            @:            pointHoverRadius: 7
-            @:        }]
-            @:    },
-            @:    options: {
-            @:        responsive: true,
-            @:        maintainAspectRatio: false,
-            @:        scales: {
-            @:            r: {
-            @:                beginAtZero: true,
-            @:                max: 4.0,
-            @:                ticks: {
-            @:                    stepSize: 0.5
-            @:                },
-            @:                pointLabels: {
-            @:                    font: {
-            @:                        size: 12,
-            @:                        weight: 'bold'
-            @:                    }
-            @:                }
-            @:            }
-            @:        },
-            @:        plugins: {
-            @:            legend: {
-            @:                position: 'top'
-            @:            },
-            @:            tooltip: {
-            @:                callbacks: {
-            @:                    label: function(context) {
-            @:                        return context.dataset.label + ': ' + context.parsed.r.toFixed(2) + ' GPA';
-            @:                    }
-            @:                }
-            @:            }
-            @:        }
-            @:    }
-            @:});
+        async function refreshStudentDashboard() {
+            try {
+                const res = await fetch('/api/dashboard/student');
+                if (!res.ok) return;
+                const data = await res.json();
+
+                // Update top cards
+                const coursesCard = document.querySelector('.text-primary + .h5, .text-primary ~ .h5');
+                const completedCard = document.querySelector('.text-info + .h5, .text-info ~ .h5');
+                if (coursesCard) coursesCard.textContent = data.currentCoursesCount ?? coursesCard.textContent;
+                if (completedCard) completedCard.textContent = data.completedCourses ?? completedCard.textContent;
+
+                // Update enrollment history line chart last point (current term)
+                if (enrollmentHistoryChart && Array.isArray(enrollmentHistoryChart.data.datasets)) {
+                    const coursesDs = enrollmentHistoryChart.data.datasets.find(d => d.label === 'Courses Enrolled');
+                    if (coursesDs) {
+                        coursesDs.data[coursesDs.data.length - 1] = data.currentCoursesCount ?? coursesDs.data[coursesDs.data.length - 1];
+                    }
+                    const creditsDs = enrollmentHistoryChart.data.datasets.find(d => d.label === 'Credits');
+                    if (creditsDs) {
+                        creditsDs.data[creditsDs.data.length - 1] = data.creditsInProgress ?? creditsDs.data[creditsDs.data.length - 1];
+                    }
+                    enrollmentHistoryChart.update();
+                }
+
+                // Update doughnut chart (completed, in progress, remaining)
+                if (progressByTermChart) {
+                    const completed = data.totalCredits ?? progressByTermChart.data.datasets[0].data[0];
+                    const inProgress = data.creditsInProgress ?? progressByTermChart.data.datasets[0].data[1];
+                    const remaining = Math.max(0, (data.requiredCredits ?? 120) - completed - inProgress);
+                    progressByTermChart.data.datasets[0].data = [completed, inProgress, remaining];
+                    progressByTermChart.update();
+                }
+            } catch (err) {
+                console.warn('Failed to refresh student dashboard', err);
+            }
         }
+
+        document.addEventListener('eduv:metrics', refreshStudentDashboard);
+        refreshStudentDashboard();
     });
     </script>
 }

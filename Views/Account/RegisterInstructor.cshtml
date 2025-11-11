@@ -48,7 +48,7 @@
 
                         <div class="mb-3 mt-3">
                             <label asp-for="DepartmentId" class="form-label"></label>
-                            <select asp-for="DepartmentId" class="form-select" asp-items="@(new SelectList((IEnumerable<EduvisionMvc.Models.Department>)ViewBag.Departments, nameof(EduvisionMvc.Models.Department.Id), nameof(EduvisionMvc.Models.Department.Name)))"></select>
+                            <select asp-for="DepartmentId" class="form-select" asp-items="ViewBag.Departments"></select>
                             <span asp-validation-for="DepartmentId" class="text-danger"></span>
                         </div>
 
