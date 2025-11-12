@@ -1,0 +1,272 @@
+{
+  "Departments": [
+    {
+      "Id": 1,
+      "Code": "CS",
+      "Name": "Computer Science",
+      "Description": "Focus on software, AI, and data.",
+      "OfficeLocation": "ENG-210",
+      "Phone": "(813) 555-1200",
+      "Email": "cs@eduvision.edu"
+    },
+    {
+      "Id": 2,
+      "Code": "BUS",
+      "Name": "Business Analytics",
+      "Description": "Data-driven business insights.",
+      "OfficeLocation": "MUMA-120",
+      "Phone": "(813) 555-1300",
+      "Email": "ba@eduvision.edu"
+    },
+    {
+      "Id": 3,
+      "Code": "FIN",
+      "Name": "Finance",
+      "Description": "Courses on corporate and investment finance.",
+      "OfficeLocation": "MUMA-230",
+      "Phone": "(813) 555-1400",
+      "Email": "fin@eduvision.edu"
+    },
+    {
+      "Id": 4,
+      "Code": "ENG",
+      "Name": "English Literature",
+      "Description": "Literature, writing, and communications.",
+      "OfficeLocation": "LIT-101",
+      "Phone": "(813) 555-1500",
+      "Email": "eng@eduvision.edu"
+    },
+    {
+      "Id": 5,
+      "Code": "MTH",
+      "Name": "Mathematics",
+      "Description": "Pure and applied mathematics.",
+      "OfficeLocation": "MTH-300",
+      "Phone": "(813) 555-1600",
+      "Email": "math@eduvision.edu"
+    }
+  ],
+  "Instructors": [
+    {
+      "Id": 1,
+      "FirstName": "Mark",
+      "LastName": "Johnson",
+      "Email": "mark.johnson@eduvision.edu",
+      "Title": "Professor",
+      "DepartmentId": 1,
+      "HireDate": "2019-08-12"
+    },
+    {
+      "Id": 2,
+      "FirstName": "Priya",
+      "LastName": "Mehta",
+      "Email": "priya.mehta@eduvision.edu",
+      "Title": "Assistant Professor",
+      "DepartmentId": 2,
+      "HireDate": "2020-09-20"
+    },
+    {
+      "Id": 3,
+      "FirstName": "David",
+      "LastName": "Liu",
+      "Email": "david.liu@eduvision.edu",
+      "Title": "Senior Lecturer",
+      "DepartmentId": 3,
+      "HireDate": "2018-07-10"
+    },
+    {
+      "Id": 4,
+      "FirstName": "Sarah",
+      "LastName": "Green",
+      "Email": "sarah.green@eduvision.edu",
+      "Title": "Associate Professor",
+      "DepartmentId": 4,
+      "HireDate": "2021-01-05"
+    },
+    {
+      "Id": 5,
+      "FirstName": "Robert",
+      "LastName": "Kim",
+      "Email": "robert.kim@eduvision.edu",
+      "Title": "Professor",
+      "DepartmentId": 5,
+      "HireDate": "2017-05-02"
+    }
+  ],
+  "Courses": [
+    {
+      "Id": 1,
+      "Code": "CS101",
+      "Title": "Intro to Programming",
+      "Description": "Basics of Python programming.",
+      "Credits": 3,
+      "Capacity": 50,
+      "RequiresApproval": false,
+      "DepartmentId": 1,
+      "InstructorId": 1,
+      "StartDate": "2025-01-10",
+      "EndDate": "2025-05-05"
+    },
+    {
+      "Id": 2,
+      "Code": "CS204",
+      "Title": "Data Structures",
+      "Description": "Algorithms and data structures in Python.",
+      "Credits": 4,
+      "Capacity": 45,
+      "RequiresApproval": true,
+      "DepartmentId": 1,
+      "InstructorId": 1,
+      "StartDate": "2025-01-10",
+      "EndDate": "2025-05-05"
+    },
+    {
+      "Id": 3,
+      "Code": "BUS210",
+      "Title": "Business Intelligence",
+      "Description": "Intro to analytics and dashboards.",
+      "Credits": 3,
+      "Capacity": 60,
+      "RequiresApproval": false,
+      "DepartmentId": 2,
+      "InstructorId": 2,
+      "StartDate": "2025-01-10",
+      "EndDate": "2025-05-05"
+    },
+    {
+      "Id": 4,
+      "Code": "FIN310",
+      "Title": "Investment Management",
+      "Description": "Portfolio theory and financial modeling.",
+      "Credits": 3,
+      "Capacity": 40,
+      "RequiresApproval": true,
+      "DepartmentId": 3,
+      "InstructorId": 3,
+      "StartDate": "2025-01-10",
+      "EndDate": "2025-05-05"
+    },
+    {
+      "Id": 5,
+      "Code": "MTH220",
+      "Title": "Calculus II",
+      "Description": "Integral calculus with applications.",
+      "Credits": 4,
+      "Capacity": 55,
+      "RequiresApproval": false,
+      "DepartmentId": 5,
+      "InstructorId": 5,
+      "StartDate": "2025-01-10",
+      "EndDate": "2025-05-05"
+    }
+  ],
+  "Students": [
+    {
+      "Id": 1,
+      "Name": "Alice Carter",
+      "Email": "alice.carter@student.eduvision.edu",
+      "Major": "Computer Science",
+      "DepartmentId": 1,
+      "EnrollmentDate": "2024-08-10",
+      "Gpa": 3.6,
+      "TotalCredits": 12
+    },
+    {
+      "Id": 2,
+      "Name": "John Rivera",
+      "Email": "john.rivera@student.eduvision.edu",
+      "Major": "Business Analytics",
+      "DepartmentId": 2,
+      "EnrollmentDate": "2024-08-12",
+      "Gpa": 3.4,
+      "TotalCredits": 9
+    },
+    {
+      "Id": 3,
+      "Name": "Emma Stone",
+      "Email": "emma.stone@student.eduvision.edu",
+      "Major": "Finance",
+      "DepartmentId": 3,
+      "EnrollmentDate": "2024-08-14",
+      "Gpa": 3.8,
+      "TotalCredits": 15
+    },
+    {
+      "Id": 4,
+      "Name": "Michael Chen",
+      "Email": "michael.chen@student.eduvision.edu",
+      "Major": "English Literature",
+      "DepartmentId": 4,
+      "EnrollmentDate": "2024-08-20",
+      "Gpa": 3.2,
+      "TotalCredits": 6
+    },
+    {
+      "Id": 5,
+      "Name": "Sofia Patel",
+      "Email": "sofia.patel@student.eduvision.edu",
+      "Major": "Mathematics",
+      "DepartmentId": 5,
+      "EnrollmentDate": "2024-08-22",
+      "Gpa": 3.7,
+      "TotalCredits": 12
+    }
+  ],
+  "Enrollments": [
+    {
+      "Id": 1,
+      "StudentId": 1,
+      "CourseId": 1,
+      "Term": "Spring 2025",
+      "Status": "Approved",
+      "Numeric_Grade": 89,
+      "LetterGrade": "B+",
+      "EnrolledDate": "2025-01-08",
+      "ApprovedDate": "2025-01-09"
+    },
+    {
+      "Id": 2,
+      "StudentId": 1,
+      "CourseId": 2,
+      "Term": "Spring 2025",
+      "Status": "Pending",
+      "Numeric_Grade": null,
+      "LetterGrade": null,
+      "EnrolledDate": "2025-01-09",
+      "ApprovedDate": null
+    },
+    {
+      "Id": 3,
+      "StudentId": 2,
+      "CourseId": 3,
+      "Term": "Spring 2025",
+      "Status": "Approved",
+      "Numeric_Grade": 94,
+      "LetterGrade": "A",
+      "EnrolledDate": "2025-01-08",
+      "ApprovedDate": "2025-01-09"
+    },
+    {
+      "Id": 4,
+      "StudentId": 3,
+      "CourseId": 4,
+      "Term": "Spring 2025",
+      "Status": "Approved",
+      "Numeric_Grade": 87,
+      "LetterGrade": "B+",
+      "EnrolledDate": "2025-01-09",
+      "ApprovedDate": "2025-01-10"
+    },
+    {
+      "Id": 5,
+      "StudentId": 5,
+      "CourseId": 5,
+      "Term": "Spring 2025",
+      "Status": "Approved",
+      "Numeric_Grade": 90,
+      "LetterGrade": "A-",
+      "EnrolledDate": "2025-01-09",
+      "ApprovedDate": "2025-01-10"
+    }
+  ]
+}
