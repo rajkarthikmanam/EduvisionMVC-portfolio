@@ -61,9 +61,46 @@ jobs:
       with:
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: ./publish.zip
+    
+    - name: Set Production environment variable via Azure CLI
+      shell: pwsh
+      run: |
+        # Extract app name and credentials from publish profile
+        [xml]$profile = [xml]'${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}'
+        $publishData = $profile.publishData.publishProfile | Where-Object { $_.publishMethod -eq 'MSDeploy' } | Select-Object -First 1
+        $appName = $publishData.msdeploySite
+        $username = $publishData.userName
+        $password = $publishData.userPWD
+        
+        # Use Kudu API to set app setting
+        $base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("${username}:${password}"))
+        $apiUrl = "https://${appName}.scm.azurewebsites.net/api/settings"
+        
+        $settings = @{
+          ASPNETCORE_ENVIRONMENT = "Production"
+        }
+        
+        try {
+          Invoke-RestMethod -Uri $apiUrl -Method Post -Body ($settings | ConvertTo-Json) -Headers @{
+            Authorization = "Basic $base64Auth"
+            "Content-Type" = "application/json"
+          }
+          Write-Host "✅ Set ASPNETCORE_ENVIRONMENT to Production via Kudu API"
+        } catch {
+          Write-Warning "Could not set environment variable via API (app may need manual configuration): $_"
+        }
 
     - name: Deployment summary
       run: |
         echo "✅ Deployment completed (Publish Profile)"
         echo "🔗 App URL: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
-        echo "➡️ Next: Verify connection string + migrations in Log Stream"
+        echo ""
+        echo "⚠️ CRITICAL: Verify Azure App Service Configuration:"
+        echo "1. Go to Azure Portal → App Service → Configuration → Application settings"
+        echo "   - ASPNETCORE_ENVIRONMENT should be 'Production' (not Development)"
+        echo "2. Go to Configuration → Connection strings"
+        echo "   - DefaultConnection (Type: SQLAzure) should be your SQL Server connection string"
+        echo "   - Example: Server=tcp:yourserver.database.windows.net,1433;Initial Catalog=yourdb;User ID=youradmin;Password=yourpass;Encrypt=True;TrustServerCertificate=False;"
+        echo ""
+        echo "3. After verifying/updating settings, restart the App Service"
+        echo "4. Check Log Stream for migration errors"

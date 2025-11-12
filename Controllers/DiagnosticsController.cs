@@ -8,18 +8,67 @@ using System.Text;
 
 namespace EduvisionMvc.Controllers;
 
-[Authorize(Roles = "Admin")]
 public class DiagnosticsController : Controller
 {
     private readonly AppDbContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IWebHostEnvironment _env;
+    private readonly IConfiguration _config;
 
-    public DiagnosticsController(AppDbContext context, UserManager<ApplicationUser> userManager)
+    public DiagnosticsController(
+        AppDbContext context, 
+        UserManager<ApplicationUser> userManager,
+        IWebHostEnvironment env,
+        IConfiguration config)
     {
         _context = context;
         _userManager = userManager;
+        _env = env;
+        _config = config;
     }
 
+    [AllowAnonymous]
+    public IActionResult Env()
+    {
+        var connString = _config.GetConnectionString("DefaultConnection") ?? "NOT SET";
+        var dbProvider = _context.Database.ProviderName ?? "UNKNOWN";
+        
+        // Mask password in connection string for security
+        var maskedConn = connString;
+        if (connString.Contains("Password=", StringComparison.OrdinalIgnoreCase))
+        {
+            var parts = connString.Split(';');
+            maskedConn = string.Join(";", parts.Select(p => 
+                p.Trim().StartsWith("Password=", StringComparison.OrdinalIgnoreCase) 
+                    ? "Password=***REDACTED***" 
+                    : p));
+        }
+        
+        var canConnect = false;
+        var dbError = "";
+        try
+        {
+            canConnect = _context.Database.CanConnect();
+        }
+        catch (Exception ex)
+        {
+            dbError = ex.Message;
+        }
+
+        return Json(new
+        {
+            environment = _env.EnvironmentName,
+            isDevelopment = _env.IsDevelopment(),
+            isProduction = _env.IsProduction(),
+            dbProvider = dbProvider,
+            connectionString = maskedConn,
+            canConnectToDb = canConnect,
+            dbError = dbError,
+            timestamp = DateTime.UtcNow
+        });
+    }
+
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CheckStudentLinks()
     {
         var sb = new StringBuilder();
