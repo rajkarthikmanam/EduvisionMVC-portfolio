@@ -163,7 +163,7 @@ public static class LmsDataSeeder
         var students = await db.Students.ToListAsync();
         var courses = await db.Courses.Include(c => c.Department).ToListAsync();
         var random = new Random(42);
-        var grades = new[] { 4.0m, 3.7m, 3.3m, 3.0m, 2.7m, 3.5m, 3.8m, 3.2m };
+    var grades = new[] { 4.0m, 3.7m, 3.3m, 3.0m, 2.7m, 3.5m, 3.8m, 3.2m };
         
         foreach (var student in students)
         {
@@ -183,8 +183,7 @@ public static class LmsDataSeeder
                         Status = EnrollmentStatus.Approved,
                         EnrolledDate = DateTime.UtcNow.AddDays(-120),
                         CompletedDate = DateTime.UtcNow.AddDays(-60),
-                        Numeric_Grade = grade,
-                        LetterGrade = GetLetterGrade(grade),
+                        NumericGrade = grade,
                         ProgressPercentage = 100,
                         TotalHoursSpent = random.Next(30, 60)
                     });
@@ -283,12 +282,5 @@ public static class LmsDataSeeder
             UploadedDate = DateTime.UtcNow.AddDays(-1)
         };
 
-    private static string GetLetterGrade(decimal grade)
-    {
-        if (grade >= 3.7m) return "A";
-        if (grade >= 3.3m) return "A-";
-        if (grade >= 3.0m) return "B+";
-        if (grade >= 2.7m) return "B";
-        return "B-";
-    }
+    // Letter grades removed; numeric grades only.
 }

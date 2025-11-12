@@ -154,7 +154,7 @@
                                         <small class="badge bg-secondary">@course.Credits credits</small>
                                     </div>
                                     @{
-                                        var enrollment = Model.AllEnrollments?.FirstOrDefault(e => e.CourseId == course.CourseId && !e.Numeric_Grade.HasValue);
+                                        var enrollment = Model.AllEnrollments?.FirstOrDefault(e => e.CourseId == course.CourseId && !e.NumericGrade.HasValue);
                                         if (enrollment != null)
                                         {
                                             <div class="progress mt-3" style="height: 22px;">
@@ -167,7 +167,7 @@
                                                 </div>
                                             </div>
                                             <small class="text-muted mt-1 d-block"><i class="bi bi-clock"></i> @enrollment.TotalHoursSpent hours spent</small>
-                                            if (enrollment.Status == EnrollmentStatus.Approved && !enrollment.Numeric_Grade.HasValue)
+                                            if (enrollment.Status == EnrollmentStatus.Approved && !enrollment.NumericGrade.HasValue)
                                             {
                                                 <form asp-controller="StudentCourses" asp-action="Drop" method="post" class="mt-2">
                                                     <input type="hidden" name="courseId" value="@enrollment.CourseId" />

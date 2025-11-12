@@ -33,7 +33,7 @@ public class EnrollmentsController : Controller
         // BUT DO NOT auto-complete enrollments for the current active term (Fall 2025)
         bool hasChanges = false;
         var affectedStudents = new HashSet<int>();
-        foreach (var enrollment in data)
+    foreach (var enrollment in data)
         {
             // Skip auto-completion for current term enrollments
             if (IsCurrentTerm(enrollment.Term))
@@ -48,10 +48,9 @@ public class EnrollmentsController : Controller
                 {
                     enrollment.Status = EnrollmentStatus.Completed;
                     // Default grade 3.5 if none
-                    if (!enrollment.Numeric_Grade.HasValue)
+                    if (!enrollment.NumericGrade.HasValue)
                     {
-                        enrollment.Numeric_Grade = 3.5m;
-                        enrollment.UpdateLetterGrade();
+                        enrollment.NumericGrade = 3.5m;
                     }
                     enrollment.CompletedDate = enrollment.Course.EndDate;
                     hasChanges = true;
@@ -98,7 +97,7 @@ public class EnrollmentsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("Id,StudentId,CourseId,Term,Numeric_Grade,Status")] Enrollment enrollment)
+    public async Task<IActionResult> Create([Bind("Id,StudentId,CourseId,Term,NumericGrade,Status")] Enrollment enrollment)
     {
         // Business rules:
         // Fall 2025: Approved/Pending status, no grade
@@ -109,9 +108,9 @@ public class EnrollmentsController : Controller
         if (IsPastTerm(enrollment.Term))
         {
             // Past term: default grade to 3.5 if not provided
-            if (!enrollment.Numeric_Grade.HasValue)
+            if (!enrollment.NumericGrade.HasValue)
             {
-                enrollment.Numeric_Grade = 3.5m;
+                enrollment.NumericGrade = 3.5m;
             }
             // Force status to Completed for past terms
             enrollment.Status = EnrollmentStatus.Completed;
@@ -119,9 +118,9 @@ public class EnrollmentsController : Controller
         else if (IsCurrentTerm(enrollment.Term))
         {
             // Active term: no grade allowed
-            if (enrollment.Numeric_Grade.HasValue)
+            if (enrollment.NumericGrade.HasValue)
             {
-                ModelState.AddModelError("Numeric_Grade", "Active term (Fall 2025) enrollment cannot have a grade yet.");
+                ModelState.AddModelError("NumericGrade", "Active term (Fall 2025) enrollment cannot have a grade yet.");
             }
             // Status should be Pending or Approved (already set from form)
             if (enrollment.Status != EnrollmentStatus.Pending && enrollment.Status != EnrollmentStatus.Approved)
@@ -151,10 +150,9 @@ public class EnrollmentsController : Controller
                     }
                 }
                 
-                if (enrollment.Status == EnrollmentStatus.Completed && enrollment.Numeric_Grade.HasValue)
+                if (enrollment.Status == EnrollmentStatus.Completed && enrollment.NumericGrade.HasValue)
                 {
                     enrollment.CompletedDate = DateTime.UtcNow;
-                    enrollment.UpdateLetterGrade();
                 }
 
                 _context.Add(enrollment);
@@ -194,7 +192,7 @@ public class EnrollmentsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("Id,StudentId,CourseId,Term,Numeric_Grade,Status")] Enrollment enrollment)
+    public async Task<IActionResult> Edit(int id, [Bind("Id,StudentId,CourseId,Term,NumericGrade,Status")] Enrollment enrollment)
     {
         if (id != enrollment.Id) return NotFound();
 
@@ -212,7 +210,7 @@ public class EnrollmentsController : Controller
         existing.CourseId = enrollment.CourseId;
         existing.Term = (enrollment.Term ?? "").Trim();
         existing.Status = enrollment.Status;
-        existing.Numeric_Grade = enrollment.Numeric_Grade;
+    existing.NumericGrade = enrollment.NumericGrade;
 
         NormalizeIncomingTerm(existing);
 
@@ -227,9 +225,9 @@ public class EnrollmentsController : Controller
             {
                 ModelState.AddModelError("Status", "Fall 2025 (active term) can only have Pending or Approved status.");
             }
-            if (existing.Numeric_Grade.HasValue)
+            if (existing.NumericGrade.HasValue)
             {
-                ModelState.AddModelError("Numeric_Grade", "Fall 2025 (active term) cannot have a grade yet. Leave it empty.");
+                ModelState.AddModelError("NumericGrade", "Fall 2025 (active term) cannot have a grade yet. Leave it empty.");
             }
         }
         else if (IsPastTerm(existing.Term))
@@ -239,16 +237,15 @@ public class EnrollmentsController : Controller
             {
                 ModelState.AddModelError("Status", "Spring/Summer 2025 (past terms) must have Completed status.");
             }
-            if (!existing.Numeric_Grade.HasValue)
+            if (!existing.NumericGrade.HasValue)
             {
-                ModelState.AddModelError("Numeric_Grade", "Spring/Summer 2025 (past terms) must have a grade.");
+                ModelState.AddModelError("NumericGrade", "Spring/Summer 2025 (past terms) must have a grade.");
             }
         }
 
-        // If grade is present, update letter grade and set completed date
-        if (existing.Numeric_Grade.HasValue)
+        // If grade is present, set completed date
+        if (existing.NumericGrade.HasValue)
         {
-            existing.UpdateLetterGrade();
             if (existing.CompletedDate == null)
             {
                 existing.CompletedDate = DateTime.UtcNow;
@@ -258,7 +255,6 @@ public class EnrollmentsController : Controller
         {
             // No grade - clear completion data
             existing.CompletedDate = null;
-            existing.LetterGrade = null;
         }
 
         if (ModelState.IsValid)
@@ -372,11 +368,11 @@ public class EnrollmentsController : Controller
         if (student == null) return;
 
         var graded = student.Enrollments
-            .Where(e => e.Numeric_Grade.HasValue && e.Status != EnrollmentStatus.Dropped && e.Course != null)
+            .Where(e => e.NumericGrade.HasValue && e.Status != EnrollmentStatus.Dropped && e.Course != null)
             .ToList();
 
         // Calculate GPA
-        student.Gpa = graded.Any() ? graded.Average(e => e.Numeric_Grade!.Value) : 0m;
+    student.Gpa = graded.Any() ? graded.Average(e => e.NumericGrade!.Value) : 0m;
         
         _context.Update(student);
         await _context.SaveChangesAsync();

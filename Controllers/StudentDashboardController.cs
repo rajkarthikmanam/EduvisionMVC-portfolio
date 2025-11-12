@@ -75,23 +75,23 @@ public class StudentDashboardController : Controller
 
         // Filter enrollments ensuring Course is not null to avoid CS8602 warnings.
         var completedEnrollments = enrollments
-            .Where(e => e.Numeric_Grade.HasValue && e.Course != null && e.Status != EnrollmentStatus.Dropped)
-            .OrderByDescending(e => e.Numeric_Grade);
+            .Where(e => e.NumericGrade.HasValue && e.Course != null && e.Status != EnrollmentStatus.Dropped)
+            .OrderByDescending(e => e.NumericGrade);
 
         // Current enrollments: Approved only (actively taking)
         var currentEnrollments = enrollments
-            .Where(e => !e.Numeric_Grade.HasValue && e.Course != null && e.Status == EnrollmentStatus.Approved)
+            .Where(e => !e.NumericGrade.HasValue && e.Course != null && e.Status == EnrollmentStatus.Approved)
             .OrderBy(e => e.Course!.Code);
 
         // Pending enrollments: Waiting for approval
         var pendingEnrollments = enrollments
-            .Where(e => !e.Numeric_Grade.HasValue && e.Course != null && e.Status == EnrollmentStatus.Pending)
+            .Where(e => !e.NumericGrade.HasValue && e.Course != null && e.Status == EnrollmentStatus.Pending)
             .OrderBy(e => e.Course!.Code);
 
         // Recalculate GPA: only graded, non-dropped enrollments
         var gradedEnrollments = completedEnrollments.ToList();
         var recalculatedGpa = gradedEnrollments.Any()
-            ? gradedEnrollments.Average(e => e.Numeric_Grade!.Value)
+            ? gradedEnrollments.Average(e => e.NumericGrade!.Value)
             : 0m;
 
         // Calculate completed credits from graded enrollments
@@ -142,7 +142,7 @@ public class StudentDashboardController : Controller
             
             // Top Performance: Only the single highest grade course
             TopCourses = completedEnrollments
-                .OrderByDescending(e => e.Numeric_Grade)
+                .OrderByDescending(e => e.NumericGrade)
                 .Take(1) // Only show THE top course
                 .Select(e => new EnrollmentSummary
                 {
@@ -151,7 +151,7 @@ public class StudentDashboardController : Controller
                     CourseTitle = e.Course!.Title,
                     Credits = e.Course!.Credits,
                     Term = e.Term,
-                    Grade = e.Numeric_Grade,
+                    Grade = e.NumericGrade,
                     InstructorName = e.Course!.CourseInstructors
                         .Select(ci => $"Dr. {ci.Instructor!.LastName}")
                         .FirstOrDefault() ?? "TBA",
@@ -160,8 +160,8 @@ public class StudentDashboardController : Controller
 
             // Areas for Improvement: Courses with grade <= 2.0
             WeakCourses = completedEnrollments
-                .Where(e => e.Numeric_Grade <= 2.0m)
-                .OrderBy(e => e.Numeric_Grade)
+                .Where(e => e.NumericGrade <= 2.0m)
+                .OrderBy(e => e.NumericGrade)
                 .Select(e => new EnrollmentSummary
                 {
                     CourseId = e.CourseId,
@@ -169,7 +169,7 @@ public class StudentDashboardController : Controller
                     CourseTitle = e.Course!.Title,
                     Credits = e.Course!.Credits,
                     Term = e.Term,
-                    Grade = e.Numeric_Grade,
+                    Grade = e.NumericGrade,
                     InstructorName = e.Course!.CourseInstructors
                         .Select(ci => $"Dr. {ci.Instructor!.LastName}")
                         .FirstOrDefault() ?? "TBA",
@@ -187,7 +187,7 @@ public class StudentDashboardController : Controller
                     CourseTitle = e.Course!.Title,
                     Credits = e.Course!.Credits,
                     Term = e.Term,
-                    Grade = e.Numeric_Grade,
+                    Grade = e.NumericGrade,
                     InstructorName = e.Course!.CourseInstructors
                         .Select(ci => $"Dr. {ci.Instructor!.LastName}")
                         .FirstOrDefault() ?? "TBA",
@@ -241,12 +241,12 @@ public class StudentDashboardController : Controller
     {
         // Group courses by department/subject area and compute average performance
         var departmentGroups = completedEnrollments
-            .Where(e => e.Numeric_Grade.HasValue && e.Course != null && e.Course.Department != null)
+            .Where(e => e.NumericGrade.HasValue && e.Course != null && e.Course.Department != null)
             .GroupBy(e => e.Course!.Department!.Code)
             .Select(g => new
             {
                 Department = g.Key,
-                AverageGrade = g.Average(e => e.Numeric_Grade!.Value)
+                AverageGrade = g.Average(e => e.NumericGrade!.Value)
             })
             .OrderBy(x => x.Department)
             .ToList();
@@ -273,9 +273,9 @@ public class StudentDashboardController : Controller
     {
         var distribution = new decimal[5]; // A, B, C, D, F
 
-        foreach (var enrollment in enrollments.Where(e => e.Numeric_Grade.HasValue))
+        foreach (var enrollment in enrollments.Where(e => e.NumericGrade.HasValue))
         {
-            var grade = enrollment.Numeric_Grade!.Value;
+            var grade = enrollment.NumericGrade!.Value;
             if (grade >= 3.7m) distribution[0]++;      // A
             else if (grade >= 2.7m) distribution[1]++; // B
             else if (grade >= 1.7m) distribution[2]++; // C

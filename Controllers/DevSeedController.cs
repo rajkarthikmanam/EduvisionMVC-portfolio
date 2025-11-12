@@ -236,8 +236,7 @@ namespace EduvisionMvc.Controllers
                         Term = eData.Term,
                         EnrolledDate = DateTime.Now.AddMonths(-3),
                         Status = eData.Status,
-                        Numeric_Grade = eData.Grade,
-                        LetterGrade = eData.Grade.HasValue ? NumericToLetter(eData.Grade.Value) : null,
+                        NumericGrade = eData.Grade,
                         ProgressPercentage = eData.Grade.HasValue ? 100 : 65,
                         TotalHoursSpent = eData.Grade.HasValue ? 45 : 30
                     };
@@ -252,7 +251,7 @@ namespace EduvisionMvc.Controllers
                 {
                     var completedCredits = _db.Enrollments
                         .Include(e => e.Course)
-                        .Where(e => e.StudentId == student.Id && e.Numeric_Grade.HasValue)
+                        .Where(e => e.StudentId == student.Id && e.NumericGrade.HasValue)
                         .Sum(e => e.Course!.Credits);
                     student.TotalCredits = completedCredits;
                 }
@@ -467,11 +466,6 @@ namespace EduvisionMvc.Controllers
                                 numericGrade = Math.Round(numericGrade.Value / 25m, 2);
                             }
                         }
-                        string? letterGrade = null;
-                        if (e.TryGetProperty("LetterGrade", out var letterGradeProp) && letterGradeProp.ValueKind == System.Text.Json.JsonValueKind.String)
-                        {
-                            letterGrade = letterGradeProp.GetString();
-                        }
 
                         var enrollment = new Enrollment
                         {
@@ -479,8 +473,7 @@ namespace EduvisionMvc.Controllers
                             CourseId = courseId,
                             Term = term,
                             Status = status,
-                            Numeric_Grade = numericGrade,
-                            LetterGrade = letterGrade,
+                            NumericGrade = numericGrade,
                             EnrolledDate = DateTime.TryParse(e.GetProperty("EnrolledDate").GetString(), out var enrollDate) ? enrollDate : DateTime.UtcNow.AddDays(-7),
                             ApprovedDate = e.TryGetProperty("ApprovedDate", out var appDateProp) && DateTime.TryParse(appDateProp.GetString(), out var appDate) ? appDate : null,
                             ProgressPercentage = numericGrade.HasValue ? 100 : 50,
@@ -496,7 +489,7 @@ namespace EduvisionMvc.Controllers
                 var studentsToUpdate = _db.Students.ToList();
                 foreach (var st in studentsToUpdate)
                 {
-                    var credits = _db.Enrollments.Include(x => x.Course).Where(x => x.StudentId == st.Id && x.Numeric_Grade.HasValue).Sum(x => x.Course!.Credits);
+                    var credits = _db.Enrollments.Include(x => x.Course).Where(x => x.StudentId == st.Id && x.NumericGrade.HasValue).Sum(x => x.Course!.Credits);
                     st.TotalCredits = credits;
                 }
                 await _db.SaveChangesAsync();

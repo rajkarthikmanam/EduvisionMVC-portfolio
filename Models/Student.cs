@@ -42,10 +42,10 @@ public class Student
 
     // Computed properties
     public int CreditsInProgress => Enrollments
-        .Where(e => e.Status == EnrollmentStatus.Approved && !e.Numeric_Grade.HasValue)
+        .Where(e => e.Status == EnrollmentStatus.Approved && !e.NumericGrade.HasValue)
         .Sum(e => e.Course?.Credits ?? 0);
 
     public int CompletedCredits => Enrollments
-        .Where(e => e.Status == EnrollmentStatus.Completed && e.Numeric_Grade.HasValue)
+        .Where(e => e.Status == EnrollmentStatus.Completed && e.NumericGrade.HasValue)
         .Sum(e => e.Course?.Credits ?? 0);
 }

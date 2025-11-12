@@ -157,12 +157,12 @@ namespace EduvisionMvc.Controllers
                     // Recalculate GPA based on enrollments
                     var enrollments = await _context.Enrollments
                         .Include(e => e.Course)
-                        .Where(e => e.StudentId == student.Id && e.Numeric_Grade.HasValue && e.Status != EnrollmentStatus.Dropped)
+                        .Where(e => e.StudentId == student.Id && e.NumericGrade.HasValue && e.Status != EnrollmentStatus.Dropped)
                         .ToListAsync();
                     
                     if (enrollments.Any())
                     {
-                        student.Gpa = enrollments.Average(e => e.Numeric_Grade!.Value);
+                        student.Gpa = enrollments.Average(e => e.NumericGrade!.Value);
                     }
                     
                     // TotalCredits field represents credits REQUIRED (not completed)
@@ -242,7 +242,7 @@ namespace EduvisionMvc.Controllers
 
             // Check for truly active enrollments (no grade AND course hasn't ended yet)
             var activeEnrollments = student.Enrollments
-                .Where(e => !e.Numeric_Grade.HasValue && 
+                .Where(e => !e.NumericGrade.HasValue && 
                            (e.Course == null || e.Course.EndDate == null || e.Course.EndDate > DateTime.UtcNow))
                 .ToList();
             

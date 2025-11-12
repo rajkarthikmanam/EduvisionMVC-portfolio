@@ -65,7 +65,7 @@ public class InstructorDashboardController : Controller
 
         // Past courses: distinct courses with at least one graded enrollment from a previous term
         var pastCourses = allInstructorCourses
-            .Where(c => c.Enrollments.Any(e => e.Term != currentTerm && e.Numeric_Grade.HasValue && e.Status != EnrollmentStatus.Dropped))
+            .Where(c => c.Enrollments.Any(e => e.Term != currentTerm && e.NumericGrade.HasValue && e.Status != EnrollmentStatus.Dropped))
             .Distinct()
             .ToList();
 
@@ -103,8 +103,8 @@ public class InstructorDashboardController : Controller
                 EnrollmentCount = c.Enrollments.Count(e => e.Term == currentTerm && e.Status != EnrollmentStatus.Dropped && e.Status != EnrollmentStatus.Rejected),
                 Capacity = c.Capacity,
                 AverageGrade = c.Enrollments
-                    .Where(e => e.Term == currentTerm && e.Numeric_Grade.HasValue && e.Status != EnrollmentStatus.Dropped && e.Status != EnrollmentStatus.Rejected)
-                    .Select(e => e.Numeric_Grade!.Value)
+                    .Where(e => e.Term == currentTerm && e.NumericGrade.HasValue && e.Status != EnrollmentStatus.Dropped && e.Status != EnrollmentStatus.Rejected)
+                    .Select(e => e.NumericGrade!.Value)
                     .DefaultIfEmpty()
                     .Average(),
                 Credits = c.Credits,
@@ -116,16 +116,16 @@ public class InstructorDashboardController : Controller
                 CourseId = c.Id,
                 Code = c.Code,
                 Title = c.Title,
-                Term = c.Enrollments.Where(e => e.Numeric_Grade.HasValue && e.Term != currentTerm).Select(e => e.Term).FirstOrDefault() ?? currentTerm,
-                TotalStudents = c.Enrollments.Count(e => e.Numeric_Grade.HasValue && e.Status != EnrollmentStatus.Dropped),
+                Term = c.Enrollments.Where(e => e.NumericGrade.HasValue && e.Term != currentTerm).Select(e => e.Term).FirstOrDefault() ?? currentTerm,
+                TotalStudents = c.Enrollments.Count(e => e.NumericGrade.HasValue && e.Status != EnrollmentStatus.Dropped),
                 AverageGrade = c.Enrollments
-                    .Where(e => e.Numeric_Grade.HasValue && e.Status != EnrollmentStatus.Dropped)
-                    .Select(e => e.Numeric_Grade!.Value)
+                    .Where(e => e.NumericGrade.HasValue && e.Status != EnrollmentStatus.Dropped)
+                    .Select(e => e.NumericGrade!.Value)
                     .DefaultIfEmpty()
                     .Average(),
-                PassRate = (c.Enrollments.Count(e => e.Numeric_Grade.HasValue && e.Status != EnrollmentStatus.Dropped) > 0)
-                    ? (c.Enrollments.Count(e => e.Numeric_Grade.HasValue && e.Numeric_Grade!.Value >= 1.0m && e.Status != EnrollmentStatus.Dropped) * 100m /
-                        c.Enrollments.Count(e => e.Numeric_Grade.HasValue && e.Status != EnrollmentStatus.Dropped))
+                PassRate = (c.Enrollments.Count(e => e.NumericGrade.HasValue && e.Status != EnrollmentStatus.Dropped) > 0)
+                    ? (c.Enrollments.Count(e => e.NumericGrade.HasValue && e.NumericGrade!.Value >= 1.0m && e.Status != EnrollmentStatus.Dropped) * 100m /
+                        c.Enrollments.Count(e => e.NumericGrade.HasValue && e.Status != EnrollmentStatus.Dropped))
                     : 0m
             }).ToList(),
             PendingApprovals = currentCourses

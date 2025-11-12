@@ -363,7 +363,7 @@ public class AccountController : Controller
             // After registration, if student has no enrollments, send to enrollment page
             if (role == "Student")
             {
-                var hasEnrollments = _db.Enrollments.Any(e => e.Student!.UserId == user.Id && !e.Numeric_Grade.HasValue);
+                var hasEnrollments = _db.Enrollments.Any(e => e.Student!.UserId == user.Id && !e.NumericGrade.HasValue);
                 if (!hasEnrollments)
                 {
                     return RedirectToAction("Index", "StudentCourses");

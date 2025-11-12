@@ -107,8 +107,8 @@ public class InstructorCoursesController : Controller
 
         ViewBag.CurrentEnrollments = course.Enrollments.Count(e => e.Status == EnrollmentStatus.Approved);
         ViewBag.AverageGrade = course.Enrollments
-            .Where(e => e.Numeric_Grade.HasValue)
-            .Select(e => e.Numeric_Grade!.Value)
+            .Where(e => e.NumericGrade.HasValue)
+            .Select(e => e.NumericGrade!.Value)
             .DefaultIfEmpty(0)
             .Average();
 

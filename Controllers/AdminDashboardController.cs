@@ -30,7 +30,7 @@ public class AdminDashboardController : Controller
         var totalInstructors = await _db.Instructors.CountAsync();
         var totalCourses = await _db.Courses.CountAsync();
         // Active = Fall 2025 term, Approved or Pending, no grade
-        var activeEnrollments = await _db.Enrollments.CountAsync(e => e.Term == "Fall 2025" && (e.Status == EnrollmentStatus.Approved || e.Status == EnrollmentStatus.Pending) && e.Numeric_Grade == null);
+        var activeEnrollments = await _db.Enrollments.CountAsync(e => e.Term == "Fall 2025" && (e.Status == EnrollmentStatus.Approved || e.Status == EnrollmentStatus.Pending) && e.NumericGrade == null);
         var avgGpa = await _db.Students.Where(s => s.Gpa > 0).Select(s => s.Gpa).DefaultIfEmpty().AverageAsync();
         var materialsCount = await _db.CourseMaterials.CountAsync();
         var discussionsCount = await _db.Discussions.CountAsync();

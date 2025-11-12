@@ -204,7 +204,7 @@ public static class IdentitySeeder
                 CourseId = course.Id,
                 Term = term,
                 Status = EnrollmentStatus.Approved,
-                Numeric_Grade = null
+                NumericGrade = null
             });
             await db.SaveChangesAsync();
         }

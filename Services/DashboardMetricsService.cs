@@ -45,7 +45,7 @@ public class DashboardMetricsService : BackgroundService
                     .CountAsync(e =>
                         e.Status == EnrollmentStatus.Completed
                         || (e.Course != null && e.Course.EndDate != null && e.Course.EndDate < nowUtc)
-                        || e.Numeric_Grade != null,
+                        || e.NumericGrade != null,
                         stoppingToken);
                 // Active = Fall 2025 term, Approved or Pending (regardless of grade presence desired by business? they prefer term-based; but keep no grade to avoid duplicates)
                 var active = await db.Enrollments.CountAsync(e => e.Term == "Fall 2025" && (e.Status == EnrollmentStatus.Approved || e.Status == EnrollmentStatus.Pending), stoppingToken);

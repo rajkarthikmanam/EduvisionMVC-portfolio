@@ -48,9 +48,9 @@
     </div>
     
     <div class="mb-3" id="gradeGroup">
-        <label asp-for="Numeric_Grade" class="form-label fw-bold">Grade (0.0 - 4.0)</label>
-        <input asp-for="Numeric_Grade" class="form-control" type="number" step="0.01" min="0" max="4" id="gradeInput" placeholder="Leave empty for Fall 2025" />
-        <span asp-validation-for="Numeric_Grade" class="text-danger"></span>
+        <label asp-for="NumericGrade" class="form-label fw-bold">Grade (0.0 - 4.0)</label>
+        <input asp-for="NumericGrade" class="form-control" type="number" step="0.01" min="0" max="4" id="gradeInput" placeholder="Leave empty for Fall 2025" />
+        <span asp-validation-for="NumericGrade" class="text-danger"></span>
         <small class="form-text text-muted">
             <strong>Fall 2025:</strong> Leave empty (active course). 
             <strong>Spring/Summer 2025:</strong> Enter grade or default 3.5 will be used.

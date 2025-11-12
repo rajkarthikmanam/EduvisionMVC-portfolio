@@ -1,0 +1,87 @@
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  AZURE_WEBAPP_NAME: 'eduvision-app'  # Replace with your Azure App Service name
+
+jobs:
+  build-and-deploy:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore EduvisionMvc.csproj
+
+    - name: Build project
+      run: dotnet build EduvisionMvc.csproj --configuration Release --no-restore
+
+    - name: Publish project
+      run: dotnet publish EduvisionMvc.csproj -c Release -o ./publish
+
+    - name: Update web.config for Production
+      shell: pwsh
+      run: |
+        $webConfigPath = "publish/web.config"
+        [xml]$webConfig = Get-Content $webConfigPath
+        
+        # Find or create environmentVariables section
+        $envVars = $webConfig.SelectSingleNode("//environmentVariables")
+        if ($null -eq $envVars) {
+          $aspNetCore = $webConfig.SelectSingleNode("//aspNetCore")
+          $envVars = $webConfig.CreateElement("environmentVariables")
+          $aspNetCore.AppendChild($envVars) | Out-Null
+        }
+        
+        # Set Production environment
+        $envVar = $webConfig.SelectSingleNode("//environmentVariable[@name='ASPNETCORE_ENVIRONMENT']")
+        if ($null -eq $envVar) {
+          $envVar = $webConfig.CreateElement("environmentVariable")
+          $envVar.SetAttribute("name", "ASPNETCORE_ENVIRONMENT")
+          $envVars.AppendChild($envVar) | Out-Null
+        }
+        $envVar.SetAttribute("value", "Production")
+        
+        # Enable stdout logging
+        $aspNetCore = $webConfig.SelectSingleNode("//aspNetCore")
+        $aspNetCore.SetAttribute("stdoutLogEnabled", "true")
+        $aspNetCore.SetAttribute("stdoutLogFile", ".\logs\stdout")
+        
+        $webConfig.Save($webConfigPath)
+        Write-Host "web.config updated for Production environment"
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: ./publish
+
+    - name: Deployment summary
+      run: |
+        echo "✅ Deployment completed successfully!"
+        echo "📦 Package created with:"
+        echo "  - Migrations folder included"
+        echo "  - NumericGrade property (not Numeric_Grade)"
+        echo "  - SQL Server provider for Production"
+        echo "  - Automatic migration on startup"
+        echo ""
+        echo "🔗 App URL: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
+        echo ""
+        echo "⚠️ Next steps:"
+        echo "1. Verify Azure SQL connection string is configured in App Service settings"
+        echo "2. Monitor deployment logs in Azure Portal"
+        echo "3. Check application logs for migration execution"

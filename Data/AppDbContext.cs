@@ -30,10 +30,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> opts) : IdentityDbConte
             .Property(u => u.CreatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-        // Configure Student
+        // Configure Student numeric fields
         b.Entity<Student>()
             .Property(x => x.Gpa)
             .HasPrecision(3, 2);
+
+        // Configure Enrollment numeric grade precision
+        b.Entity<Enrollment>()
+            .Property(e => e.NumericGrade)
+            .HasPrecision(3, 2);
+
+        // Configure AssignmentSubmission grade if exists
+        b.Entity<AssignmentSubmission>()
+            .Property(s => s.Grade)
+            .HasPrecision(4, 2);
 
         // Unique Email for Student test identity mapping
         b.Entity<Student>()

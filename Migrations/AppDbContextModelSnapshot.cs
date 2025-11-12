@@ -171,6 +171,7 @@ namespace EduvisionMvc.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<decimal?>("Grade")
+                        .HasPrecision(4, 2)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("StudentId")
@@ -477,13 +478,11 @@ namespace EduvisionMvc.Migrations
                     b.Property<DateTime?>("LastAccessDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("LetterGrade")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Notes")
                         .HasColumnType("TEXT");
 
-                    b.Property<decimal?>("Numeric_Grade")
+                    b.Property<decimal?>("NumericGrade")
+                        .HasPrecision(3, 2)
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("ProgressPercentage")

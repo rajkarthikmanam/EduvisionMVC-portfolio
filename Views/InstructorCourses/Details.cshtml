@@ -167,9 +167,9 @@
                                                     </td>
                                                     <td>@enrollment.TotalHoursSpent h</td>
                                                     <td>
-                                                        @if (enrollment.Numeric_Grade.HasValue)
+                                                        @if (enrollment.NumericGrade.HasValue)
                                                         {
-                                                            <span class="badge bg-primary">@enrollment.LetterGrade (@enrollment.Numeric_Grade?.ToString("F2"))</span>
+                                                            <span class="badge bg-primary">@enrollment.NumericGrade?.ToString("F2")</span>
                                                         }
                                                         else
                                                         {
@@ -273,11 +273,11 @@
                                                 </tr>
                                                 <tr>
                                                     <th>Total Graded:</th>
-                                                    <td>@(Model.Enrollments?.Count(e => e.Numeric_Grade.HasValue) ?? 0)</td>
+                                                    <td>@(Model.Enrollments?.Count(e => e.NumericGrade.HasValue) ?? 0)</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Not Graded:</th>
-                                                    <td>@(Model.Enrollments?.Count(e => !e.Numeric_Grade.HasValue && e.Status == EnrollmentStatus.Approved) ?? 0)</td>
+                                                    <td>@(Model.Enrollments?.Count(e => !e.NumericGrade.HasValue && e.Status == EnrollmentStatus.Approved) ?? 0)</td>
                                                 </tr>
                                                 <tr>
                                                     <th>Total Enrolled:</th>
@@ -385,38 +385,29 @@
             // Grade Distribution Chart
             const gradeCtx = document.getElementById('gradeDistributionChart');
             if (gradeCtx) {
-                const grades = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                const graded = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
                     (Model.Enrollments ?? new List<EduvisionMvc.Models.Enrollment>())
-                        .Where(e => e.LetterGrade != null)
-                        .GroupBy(e => e.LetterGrade!)
-                        .OrderBy(g => g.Key)
-                        .Select(g => g.Key)
+                        .Where(e => e.NumericGrade.HasValue)
+                        .Select(e => e.NumericGrade!.Value)
                         .ToList()
                 ));
-                const counts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-                    (Model.Enrollments ?? new List<EduvisionMvc.Models.Enrollment>())
-                        .Where(e => e.LetterGrade != null)
-                        .GroupBy(e => e.LetterGrade!)
-                        .OrderBy(g => g.Key)
-                        .Select(g => g.Count())
-                        .ToList()
-                ));
-                
+                // Build histogram buckets (e.g., 2.5-2.9, 3.0-3.4, 3.5-3.9, 4.0)
+                const buckets = [
+                    { label: '2.5-2.9', min: 2.5, max: 2.99 },
+                    { label: '3.0-3.4', min: 3.0, max: 3.49 },
+                    { label: '3.5-3.9', min: 3.5, max: 3.99 },
+                    { label: '4.0', min: 4.0, max: 4.0 }
+                ];
+                const counts = buckets.map(b => graded.filter(g => g >= b.min && g <= b.max).length);
                 new Chart(gradeCtx.getContext('2d'), {
                     type: 'bar',
                     data: {
-                        labels: grades,
+                        labels: buckets.map(b => b.label),
                         datasets: [{
-                            label: 'Number of Students',
+                            label: 'Students',
                             data: counts,
-                            backgroundColor: [
-                                'rgba(40, 167, 69, 0.7)',   // Green for A
-                                'rgba(23, 162, 184, 0.7)',  // Cyan for B
-                                'rgba(255, 193, 7, 0.7)',   // Yellow for C
-                                'rgba(253, 126, 20, 0.7)',  // Orange for D
-                                'rgba(220, 53, 69, 0.7)'    // Red for F
-                            ],
-                            borderColor: 'rgba(200, 200, 200, 1)',
+                            backgroundColor: 'rgba(23, 162, 184, 0.7)',
+                            borderColor: 'rgba(23, 162, 184, 1)',
                             borderWidth: 1
                         }]
                     },
@@ -424,14 +415,9 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: { stepSize: 1 }
-                            }
+                            y: { beginAtZero: true, ticks: { stepSize: 1 } }
                         },
-                        plugins: {
-                            legend: { display: false }
-                        }
+                        plugins: { legend: { display: false } }
                     }
                 });
             }

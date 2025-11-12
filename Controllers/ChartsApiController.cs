@@ -22,13 +22,13 @@ namespace EduvisionMvc.Controllers
             var q = await Task.Run(() =>
                 _db.Enrollments
                     .Include(e => e.Course)
-                    .Where(e => e.Numeric_Grade != null)  // Only completed courses with grades
+                    .Where(e => e.NumericGrade != null)  // Only completed courses with grades
                     .AsEnumerable()
                     .GroupBy(e => e.Course?.Code ?? "Unknown")
                     .Select(g => new
                     {
                         code = g.Key,
-                        avg = Math.Round(g.Average(x => (double)x.Numeric_Grade!.Value), 2)
+                        avg = Math.Round(g.Average(x => (double)x.NumericGrade!.Value), 2)
                     })
                     .OrderBy(x => x.code)
                     .ToList()
@@ -46,8 +46,8 @@ namespace EduvisionMvc.Controllers
                 .Select(c => new {
                     code = c.Code,
                     capacity = c.Capacity,
-                    current = c.Enrollments.Count(e => e.Status == Models.EnrollmentStatus.Approved && !e.Numeric_Grade.HasValue),
-                    utilization = c.Capacity == 0 ? 0 : Math.Round(100.0 * c.Enrollments.Count(e => e.Status == Models.EnrollmentStatus.Approved && !e.Numeric_Grade.HasValue) / c.Capacity, 1)
+                    current = c.Enrollments.Count(e => e.Status == Models.EnrollmentStatus.Approved && !e.NumericGrade.HasValue),
+                    utilization = c.Capacity == 0 ? 0 : Math.Round(100.0 * c.Enrollments.Count(e => e.Status == Models.EnrollmentStatus.Approved && !e.NumericGrade.HasValue) / c.Capacity, 1)
                 })
                 .OrderByDescending(x => x.utilization)
                 .ToListAsync();
@@ -59,8 +59,8 @@ namespace EduvisionMvc.Controllers
         public async Task<IActionResult> GetGradeDistribution()
         {
             var grades = await _db.Enrollments
-                .Where(e => e.Numeric_Grade.HasValue)
-                .Select(e => e.Numeric_Grade!.Value)
+                .Where(e => e.NumericGrade.HasValue)
+                .Select(e => e.NumericGrade!.Value)
                 .ToListAsync();
 
             int a = grades.Count(g => g >= 3.7m);
@@ -95,10 +95,10 @@ namespace EduvisionMvc.Controllers
                     department = d.Name,
                     active = d.Courses
                         .SelectMany(c => c.Enrollments)
-                        .Count(e => e.Status == Models.EnrollmentStatus.Approved && !e.Numeric_Grade.HasValue),
+                        .Count(e => e.Status == Models.EnrollmentStatus.Approved && !e.NumericGrade.HasValue),
                     completed = d.Courses
                         .SelectMany(c => c.Enrollments)
-                        .Count(e => e.Status == Models.EnrollmentStatus.Completed && e.Numeric_Grade.HasValue)
+                        .Count(e => e.Status == Models.EnrollmentStatus.Completed && e.NumericGrade.HasValue)
                 })
                 .OrderByDescending(x => x.active + x.completed)
                 .ToListAsync();

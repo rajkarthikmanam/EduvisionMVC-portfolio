@@ -53,8 +53,8 @@ public class Course
     public bool IsFull => CurrentEnrollments >= Capacity;
     
     public decimal? AverageGrade => Enrollments
-        .Where(e => e.Numeric_Grade.HasValue)
-        .Select(e => e.Numeric_Grade!.Value)
+        .Where(e => e.NumericGrade.HasValue)
+        .Select(e => e.NumericGrade!.Value)
         .DefaultIfEmpty()
         .Average();
 

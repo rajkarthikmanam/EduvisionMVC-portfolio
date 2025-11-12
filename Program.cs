@@ -11,8 +11,26 @@ using Microsoft.AspNetCore.Authorization;
 var builder = WebApplication.CreateBuilder(args);
 
 // --- Database context ---
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    if (string.IsNullOrWhiteSpace(connectionString))
+    {
+        throw new InvalidOperationException("DefaultConnection string is missing. Configure it in appsettings or Azure App Service settings.");
+    }
+
+    // Environment-based provider selection:
+    // Development → SQLite (local file database)
+    // Production → SQL Server (Azure SQL Database)
+    if (builder.Environment.IsDevelopment())
+    {
+        options.UseSqlite(connectionString);
+    }
+    else
+    {
+        options.UseSqlServer(connectionString);
+    }
+});
 
 // --- Identity & MVC setup ---
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -71,16 +89,24 @@ builder.Services.AddHttpClient("openlib", c =>
 
 var app = builder.Build();
 
-// --- Apply migrations & ensure DB exists ---
-using (var scope = app.Services.CreateScope())
+// --- Apply migrations & ensure DB exists (Production only) ---
+if (app.Environment.IsProduction())
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    
+    // Apply migrations to create/update database schema
     db.Database.Migrate();
+    
+    // Seed roles and users if needed
+    IdentitySeeder.SeedAsync(scope.ServiceProvider).GetAwaiter().GetResult();
 }
 
-// --- Seed roles and admin user ---
-// ONLY seeds roles and the admin user - does NOT reseed domain data
-IdentitySeeder.SeedAsync(app.Services).GetAwaiter().GetResult();
+// --- Seed roles and admin user (Development only - Production seeds during migration block above) ---
+if (app.Environment.IsDevelopment())
+{
+    IdentitySeeder.SeedAsync(app.Services).GetAwaiter().GetResult();
+}
 
 // --- Seed richer LMS domain data ---
 // DISABLED: Uncomment only for initial setup, otherwise data gets reset on every restart
@@ -115,12 +141,12 @@ app.MapGet("/api/charts/gradesByCourse", async (AppDbContext db) =>
 {
     var q = await db.Enrollments
         .Include(e => e.Course)
-        .Where(e => e.Numeric_Grade != null)
+        .Where(e => e.NumericGrade != null)
         .GroupBy(e => e.Course!.Code)
         .Select(g => new
         {
             code = g.Key,
-            avg = Math.Round(g.Average(x => Convert.ToDouble(x.Numeric_Grade!.Value)), 2)
+            avg = Math.Round(g.Average(x => Convert.ToDouble(x.NumericGrade!.Value)), 2)
         })
         .OrderBy(x => x.code)
         .ToListAsync();

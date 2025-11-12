@@ -105,11 +105,11 @@ public class DashboardApiController : ControllerBase
             .ToList();
 
         var completedEnrollments = student.Enrollments
-            .Where(e => e.Numeric_Grade.HasValue && e.Status != EnrollmentStatus.Dropped)
+            .Where(e => e.NumericGrade.HasValue && e.Status != EnrollmentStatus.Dropped)
             .ToList();
 
         var totalCredits = completedEnrollments.Sum(e => e.Course?.Credits ?? 0);
-        var creditsInProgress = currentEnrollments.Where(e => !e.Numeric_Grade.HasValue).Sum(e => e.Course?.Credits ?? 0);
+        var creditsInProgress = currentEnrollments.Where(e => !e.NumericGrade.HasValue).Sum(e => e.Course?.Credits ?? 0);
 
         // Build historical aggregates by term similar to the view
         var history = student.Enrollments
@@ -125,7 +125,7 @@ public class DashboardApiController : ControllerBase
 
         return Ok(new
         {
-            currentCoursesCount = currentEnrollments.Count(e => !e.Numeric_Grade.HasValue),
+            currentCoursesCount = currentEnrollments.Count(e => !e.NumericGrade.HasValue),
             completedCourses = completedEnrollments.Count,
             totalCredits,
             creditsInProgress,

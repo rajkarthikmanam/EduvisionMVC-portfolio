@@ -130,7 +130,7 @@ public class StudentCoursesController : Controller
             CourseId = courseId,
             Term = term,
             Status = initialStatus,
-            Numeric_Grade = null,
+            NumericGrade = null,
             EnrolledDate = DateTime.UtcNow
         };
         
@@ -158,7 +158,7 @@ public class StudentCoursesController : Controller
         var term = GetCurrentTerm();
         var enrollment = await _db.Enrollments
             .Include(e => e.Course)
-            .FirstOrDefaultAsync(e => e.StudentId == student.Id && e.CourseId == courseId && e.Term == term && e.Status == EnrollmentStatus.Approved && !e.Numeric_Grade.HasValue);
+            .FirstOrDefaultAsync(e => e.StudentId == student.Id && e.CourseId == courseId && e.Term == term && e.Status == EnrollmentStatus.Approved && !e.NumericGrade.HasValue);
         if (enrollment == null)
         {
             TempData["EnrollMessage"] = "Unable to drop: enrollment not found or already graded.";

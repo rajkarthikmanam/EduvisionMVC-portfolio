@@ -50,9 +50,9 @@
                 <span asp-validation-for="Term" class="text-danger"></span>
             </div>
             <div class="form-group mb-3">
-                <label asp-for="Numeric_Grade" class="control-label fw-bold">Grade (0.0 - 4.0)</label>
-                <input asp-for="Numeric_Grade" class="form-control" type="number" step="0.01" min="0" max="4" placeholder="Leave empty for in-progress courses" />
-                <span asp-validation-for="Numeric_Grade" class="text-danger"></span>
+                <label asp-for="NumericGrade" class="control-label fw-bold">Grade (0.0 - 4.0)</label>
+                <input asp-for="NumericGrade" class="form-control" type="number" step="0.01" min="0" max="4" placeholder="Leave empty for in-progress courses" />
+                <span asp-validation-for="NumericGrade" class="text-danger"></span>
                 <small class="form-text text-muted">
                     <strong>Leave empty</strong> for active/in-progress courses. Enter 0.0-4.0 for completed courses only.
                 </small>
