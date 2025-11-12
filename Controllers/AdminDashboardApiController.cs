@@ -89,14 +89,17 @@ namespace EduvisionMvc.Controllers
         {
             try
             {
-                var data = await _db.Departments
+                // Load departments and courses separately to avoid MARS issues
+                var departments = await _db.Departments.Include(d => d.Courses).ToListAsync();
+                
+                var data = departments
                     .Select(d => new
                     {
                         dept = d.Code,
-                        count = d.Courses.Count()
+                        count = d.Courses.Count
                     })
                     .OrderByDescending(x => x.count)
-                    .ToListAsync();
+                    .ToList();
 
                 return Ok(data);
             }
