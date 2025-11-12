@@ -24,38 +24,42 @@
   </ul>
 </div>
 
-<h2 class="mt-5">🧑‍💻 Self Reflections</h2>
+<h2 class="mt-5">� Challenges and Solutions</h2>
 
-<div class="card p-4 m-2 shadow-sm bg-light">
-  <h4>Raj Karthik Manam — Self Reflection</h4>
-  
-  <p><strong>⏱️ Time Spent:</strong><br/>
-  Worked consistently over three weeks, averaging 15–18 hours per week. Most of the time was spent debugging database migrations, configuring Azure CI/CD, and testing deployment dependencies across the three role-based dashboards.</p>
-
-  <p><strong>📚 Key Learnings:</strong><br/>
-  Gained deep practical understanding of the Azure deployment pipeline (GitHub Actions with publish profiles), environment management between Development and Production, and database migration handling in Entity Framework Core. Strengthened version-control discipline with Git and learned how small configuration changes in Program.cs or appsettings can cascade across dependent dashboards.</p>
-
-  <p><strong>⚠️ Challenges and Solutions:</strong><br/>
-  The biggest challenge was deployment: each change in one dashboard affected shared models and caused authentication or seeding errors in others. By isolating migrations, enforcing clear role-based routing, and adding diagnostic endpoints, I stabilized the environment. Continuous collaboration with Ananya during each deploy iteration helped identify layout regressions quickly.</p>
-
-  <p><strong>💡 Suggestions for Improvement:</strong><br/>
-  In future projects, I plan to improve my time estimation and automate testing pipelines early to reduce manual debugging. Better documentation of migration versions and shared model ownership will make cross-dashboard updates smoother. I also want to strengthen communication loops so that UI and backend validation happen in parallel rather than sequentially.</p>
+<div class="card p-4 m-2 shadow-sm border-primary">
+  <h4 class="text-primary">1. CI/CD Configuration Complexity</h4>
+  <p><strong>Challenge:</strong> Setting up a secure and automated deployment pipeline with GitHub Actions and Azure App Service required extensive debugging of publish profiles, environment variable injection, and build artifact management.</p>
+  <p><strong>Solution:</strong> Implemented publish profile-based deployment approach for stable Azure integration. Created web.config transformation to inject <code>ASPNETCORE_ENVIRONMENT</code> variable. Configured zip-based deployment artifacts excluding unnecessary build files. Added diagnostic endpoints (<code>/Diagnostics/Env</code>, <code>/Diagnostics/Migrations</code>) for runtime verification.</p>
 </div>
 
-<div class="card p-4 m-2 shadow-sm bg-light">
-  <h4>Ananya Gullapally — Self Reflection</h4>
-  
-  <p><strong>⏱️ Time Spent:</strong><br/>
-  Dedicated roughly 12–15 hours per week over three weeks, focusing primarily on the frontend, interface refinements, and integrating Chart.js visualizations. Additional time was spent syncing the UI with backend controllers and testing role-based flows for Students, Instructors, and Admins.</p>
+<div class="card p-4 m-2 shadow-sm border-warning">
+  <h4 class="text-warning">2. EF Core Migration Conflicts</h4>
+  <p><strong>Challenge:</strong> Multiple migration regeneration cycles caused schema drift, duplicate migration files in publish output triggering compilation errors, and <code>PendingModelChangesWarning</code> preventing migration application.</p>
+  <p><strong>Solution:</strong> Implemented <code>AppDbContextFactory</code> for design-time SQL Server context, ensuring migrations generated with production provider. Added <code>.csproj</code> exclusion rules to prevent <code>/publish/**/*.cs</code> compilation. Deleted and regenerated clean migrations aligned with model snapshot. Configured environment-based provider selection (SQLite dev, SQL Server prod).</p>
+</div>
 
-  <p><strong>📚 Key Learnings:</strong><br/>
-  Enhanced understanding of how MVC controllers and Razor views exchange data through view models, and how design consistency affects usability. Improved knowledge of Git collaboration (branch management, merges, and conflict resolution) and gained confidence in debugging CSS and Bootstrap layouts that interact with dynamic data.</p>
+<div class="card p-4 m-2 shadow-sm border-danger">
+  <h4 class="text-danger">3. Multiple Cascade Path Errors (SQL Server)</h4>
+  <p><strong>Challenge:</strong> SQL Server rejected initial migration with error: "may cause cycles or multiple cascade paths" on <code>FK_Students_Instructors_AdvisorInstructorId</code> due to conflicting cascade routes through Department relationships.</p>
+  <p><strong>Solution:</strong> Changed <code>Instructor → Department</code> relationship from Cascade to Restrict. Modified <code>Department.Chair → Instructor</code> from SetNull to Restrict. Kept <code>Student.AdvisorInstructor</code> as SetNull (safe path). Updated both <code>AppDbContext</code> configuration and migration <code>ReferentialAction</code> values.</p>
+</div>
 
-  <p><strong>⚠️ Challenges and Solutions:</strong><br/>
-  The primary challenge was maintaining a unified visual design while backend APIs and database schemas evolved. Frequent schema changes initially broke the visual bindings. Through coordinated testing with Karthik and incremental pushes, I learned to stabilize front-end assets and manage layout dependencies gracefully.</p>
+<div class="card p-4 m-2 shadow-sm border-info">
+  <h4 class="text-info">4. Authentication Redirect Loops</h4>
+  <p><strong>Challenge:</strong> Initial global <code>FallbackPolicy</code> requiring authentication caused infinite redirect loops on <code>/Account/Login</code> and <code>/Account/Register</code> pages.</p>
+  <p><strong>Solution:</strong> Removed global <code>RequireAuthenticatedUser()</code> fallback policy. Applied <code>[Authorize]</code> attributes selectively to protected controllers. Added <code>[AllowAnonymous]</code> explicitly to authentication endpoints (Login, Register, RegisterInstructor). Implemented role-based authorization with <code>[Authorize(Roles = "Admin")]</code> where needed.</p>
+</div>
 
-  <p><strong>💡 Suggestions for Improvement:</strong><br/>
-  I plan to increase my backend involvement to anticipate schema changes earlier. Next time, I'll improve early coordination between frontend and backend commits to prevent integration conflicts. Strengthening my familiarity with Azure and EF Core will help me assist in deployment troubleshooting. I'll also prioritize more rigorous UI/UX testing sessions with real users before final deployments.</p>
+<div class="card p-4 m-2 shadow-sm border-success">
+  <h4 class="text-success">5. Identity Table Sync (AspNetUsers Missing)</h4>
+  <p><strong>Challenge:</strong> Login/register operations failed with "Invalid object name 'AspNetUsers'" despite migrations appearing in codebase, caused by migrations never executing on Azure SQL.</p>
+  <p><strong>Solution:</strong> Created <code>/Diagnostics/ApplyMigrations</code> endpoint to manually trigger <code>context.Database.Migrate()</code>. Added automatic migration application in <code>Program.cs</code> startup (Production environment only). Wrapped migration calls in try/catch to log errors without crashing app startup. Verified migration application via <code>/Diagnostics/Migrations</code> reporting endpoint.</p>
+</div>
+
+<div class="card p-4 m-2 shadow-sm border-secondary">
+  <h4 class="text-secondary">6. Interlinked Dashboard Dependencies</h4>
+  <p><strong>Challenge:</strong> Functional dependencies across Student/Instructor/Admin dashboards created chain effects when modifying shared models or controllers, causing layout breaks or data binding errors.</p>
+  <p><strong>Solution:</strong> Established strict model contracts with comprehensive navigation properties. Implemented centralized <code>IdentitySeeder</code> for consistent role and initial user creation. Used <code>EnsureDomainLinksByEmailAsync</code> helper to synchronize ApplicationUser ↔ Student/Instructor linkage. Coordinated incremental commits between frontend and backend changes.</p>
 </div>
 
 
