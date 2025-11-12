@@ -12,7 +12,19 @@ public static class SampleDataSeeder
         var deptCount = await db.Departments.CountAsync();
         if (deptCount >= 5) return;
 
-        // Clear ALL existing domain data (keep Identity tables intact)
+        // CRITICAL: Clear user FK links FIRST to avoid constraint violations
+        var allUsers = await userManager.Users.ToListAsync();
+        foreach (var user in allUsers)
+        {
+            if (user.StudentId != null || user.InstructorId != null)
+            {
+                user.StudentId = null;
+                user.InstructorId = null;
+                await userManager.UpdateAsync(user);
+            }
+        }
+
+        // Now safe to delete domain entities
         var allEnrollments = await db.Enrollments.ToListAsync();
         var allCourseInstructors = await db.CourseInstructors.ToListAsync();
         var allCourses = await db.Courses.ToListAsync();
@@ -27,17 +39,6 @@ public static class SampleDataSeeder
         db.Instructors.RemoveRange(allInstructors);
         db.Departments.RemoveRange(allDepts);
         await db.SaveChangesAsync();
-
-        // Clear orphaned user links
-        var usersWithLinks = await userManager.Users
-            .Where(u => u.StudentId != null || u.InstructorId != null)
-            .ToListAsync();
-        foreach (var user in usersWithLinks)
-        {
-            user.StudentId = null;
-            user.InstructorId = null;
-            await userManager.UpdateAsync(user);
-        }
 
         // STEP 1: Create 5 Departments
         var depts = new List<Department>
