@@ -8,7 +8,7 @@ namespace EduvisionMvc.Controllers
 {
     [ApiController]
     [Route("api/dashboard/admin")]
-    [Authorize(Roles = "Admin")]
+    [AllowAnonymous]
     public class AdminDashboardApiController : ControllerBase
     {
         private readonly AppDbContext _db;
