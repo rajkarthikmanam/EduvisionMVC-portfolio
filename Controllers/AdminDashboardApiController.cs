@@ -49,45 +49,19 @@ namespace EduvisionMvc.Controllers
         {
             try
             {
-                _logger.LogInformation("GetEnrollmentTrend started");
+                // Load all terms into memory first
+                var allTerms = await _db.Enrollments.Select(e => e.Term).ToListAsync();
                 
-                // Get distinct terms and count enrollments per term
-                var distinctTerms = await _db.Enrollments.Select(e => e.Term).Distinct().ToListAsync();
-                
-                var raw = new List<dynamic>();
-                foreach (var term in distinctTerms)
-                {
-                    var count = await _db.Enrollments.CountAsync(e => e.Term == term);
-                    raw.Add(new { term, count });
-                }
+                // Group in-memory using LINQ
+                var grouped = allTerms
+                    .GroupBy(t => t)
+                    .Select(g => new { term = g.Key, count = g.Count() })
+                    .OrderBy(x => x.term)
+                    .ToList();
 
-                _logger.LogInformation("Retrieved {Count} term groups", raw.Count);
+                var labels = grouped.Select(x => x.term).ToArray();
+                var data = grouped.Select(x => x.count).ToArray();
 
-                int TermOrder(string term)
-                {
-                    if (string.IsNullOrWhiteSpace(term)) return int.MaxValue;
-                    var parts = term.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                    if (parts.Length >= 2 && int.TryParse(parts[^1], out var year))
-                    {
-                        var season = string.Join(' ', parts.Take(parts.Length - 1));
-                        var seasonVal = season.ToLower() switch
-                        {
-                            "winter" => 1,
-                            "spring" => 2,
-                            "summer" => 3,
-                            "fall" => 4,
-                            _ => 5
-                        };
-                        return year * 10 + seasonVal;
-                    }
-                    return int.MaxValue - 1;
-                }
-
-                var ordered = raw.OrderBy(x => TermOrder(x.term)).ToList();
-                var labels = ordered.Select(x => (string)x.term).ToArray();
-                var data = ordered.Select(x => (int)x.count).ToArray();
-
-                _logger.LogInformation("Returning {LabelCount} labels", labels.Length);
                 return Ok(new { labels, data });
             }
             catch (Exception ex)
