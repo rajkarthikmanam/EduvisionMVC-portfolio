@@ -49,12 +49,18 @@ jobs:
         $webConfig.Save($webConfigPath)
         Write-Host "web.config updated for Production"
 
+    - name: Create deployment package (zip)
+      shell: pwsh
+      run: |
+        if (Test-Path publish.zip) { Remove-Item publish.zip -Force }
+        Compress-Archive -Path "publish/*" -DestinationPath publish.zip -Force
+        Write-Host "Created publish.zip"
+
     - name: Deploy to Azure Web App (Publish Profile)
       uses: azure/webapps-deploy@v2
       with:
-        app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: ./publish
+        package: ./publish.zip
 
     - name: Deployment summary
       run: |
