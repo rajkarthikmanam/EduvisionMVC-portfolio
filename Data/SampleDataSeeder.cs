@@ -8,25 +8,35 @@ public static class SampleDataSeeder
 {
     public static async Task SeedAsync(AppDbContext db, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
     {
-        // Only seed if we have less than 5 departments
+        // Check if already seeded with 5 rows
         var deptCount = await db.Departments.CountAsync();
         if (deptCount >= 5) return;
 
-        // If we have 1 dept from IdentitySeeder but need 5, clear and reseed all
-        if (deptCount > 0 && deptCount < 5)
+        // Clear ALL existing domain data (keep Identity tables intact)
+        var allEnrollments = await db.Enrollments.ToListAsync();
+        var allCourseInstructors = await db.CourseInstructors.ToListAsync();
+        var allCourses = await db.Courses.ToListAsync();
+        var allStudents = await db.Students.ToListAsync();
+        var allInstructors = await db.Instructors.ToListAsync();
+        var allDepts = await db.Departments.ToListAsync();
+        
+        db.Enrollments.RemoveRange(allEnrollments);
+        db.CourseInstructors.RemoveRange(allCourseInstructors);
+        db.Courses.RemoveRange(allCourses);
+        db.Students.RemoveRange(allStudents);
+        db.Instructors.RemoveRange(allInstructors);
+        db.Departments.RemoveRange(allDepts);
+        await db.SaveChangesAsync();
+
+        // Clear orphaned user links
+        var usersWithLinks = await userManager.Users
+            .Where(u => u.StudentId != null || u.InstructorId != null)
+            .ToListAsync();
+        foreach (var user in usersWithLinks)
         {
-            var existingDepts = await db.Departments.ToListAsync();
-            var deptIds = existingDepts.Select(d => d.Id).ToList();
-            var oldCourses = await db.Courses.Where(c => deptIds.Contains(c.DepartmentId)).ToListAsync();
-            var oldCourseIds = oldCourses.Select(c => c.Id).ToList();
-            
-            db.Enrollments.RemoveRange(db.Enrollments.Where(e => oldCourseIds.Contains(e.CourseId)));
-            db.CourseInstructors.RemoveRange(db.CourseInstructors.Where(ci => oldCourseIds.Contains(ci.CourseId)));
-            db.Courses.RemoveRange(oldCourses);
-            db.Instructors.RemoveRange(db.Instructors.Where(i => deptIds.Contains(i.DepartmentId)));
-            db.Students.RemoveRange(db.Students.Where(s => s.DepartmentId.HasValue && deptIds.Contains(s.DepartmentId.Value)));
-            db.Departments.RemoveRange(existingDepts);
-            await db.SaveChangesAsync();
+            user.StudentId = null;
+            user.InstructorId = null;
+            await userManager.UpdateAsync(user);
         }
 
         // STEP 1: Create 5 Departments
