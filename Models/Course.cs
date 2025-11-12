@@ -13,7 +13,7 @@ public class Course
     public string Title { get; set; } = "";
     [StringLength(1000)]
     public string Description { get; set; } = "";
-    [Range(0, 10)]
+    [Range(0, 120)]
     public int Credits { get; set; }
     [Range(1, 500)]
     public int Capacity { get; set; }
