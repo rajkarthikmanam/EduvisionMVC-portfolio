@@ -28,6 +28,31 @@ public class DiagnosticsController : Controller
     }
 
     [AllowAnonymous]
+    public async Task<IActionResult> Counts()
+    {
+        try
+        {
+            var counts = new
+            {
+                Departments = await _context.Departments.CountAsync(),
+                Instructors = await _context.Instructors.CountAsync(),
+                Students = await _context.Students.CountAsync(),
+                Courses = await _context.Courses.CountAsync(),
+                Enrollments = await _context.Enrollments.CountAsync(),
+                Users = await _context.Users.CountAsync(),
+                Roles = await _context.Roles.CountAsync(),
+                Provider = _context.Database.ProviderName,
+                CanConnect = _context.Database.CanConnect()
+            };
+            return Json(new { Status = "Success", Counts = counts, Timestamp = DateTime.UtcNow });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { Status = "Error", Message = ex.Message, Inner = ex.InnerException?.Message });
+        }
+    }
+
+    [AllowAnonymous]
     public IActionResult Env()
     {
         var connString = _config.GetConnectionString("DefaultConnection") ?? "NOT SET";
