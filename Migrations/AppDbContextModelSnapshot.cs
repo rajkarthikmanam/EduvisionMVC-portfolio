@@ -1027,7 +1027,7 @@ namespace EduvisionMvc.Migrations
                     b.HasOne("EduvisionMvc.Models.Instructor", "Chair")
                         .WithMany()
                         .HasForeignKey("ChairId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Chair");
                 });
@@ -1105,7 +1105,7 @@ namespace EduvisionMvc.Migrations
                     b.HasOne("EduvisionMvc.Models.Department", "Department")
                         .WithMany()
                         .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Department");

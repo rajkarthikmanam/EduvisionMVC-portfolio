@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace EduvisionMvc.Migrations
 {
     /// <inheritdoc />
-    public partial class SqlServerInitial : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -390,12 +390,12 @@ namespace EduvisionMvc.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Instructors", x => x.Id);
-                        table.ForeignKey(
-                            name: "FK_Instructors_Departments_DepartmentId",
-                            column: x => x.DepartmentId,
-                            principalTable: "Departments",
-                            principalColumn: "Id",
-                            onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Instructors_Departments_DepartmentId",
+                        column: x => x.DepartmentId,
+                        principalTable: "Departments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
