@@ -143,26 +143,29 @@ public class AccountController : Controller
     public async Task<IActionResult> Login(string email, string password, string? returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
-        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+        
+        try
         {
-            ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-            return View();
-        }
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+            {
+                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                return View();
+            }
 
-        // Try finding user by email first, then fall back to username (supports demo1, etc.)
-        var user = await _userManager.FindByEmailAsync(email.Trim());
-        if (user == null)
-        {
-            user = await _userManager.FindByNameAsync(email.Trim());
-        }
-        if (user == null)
-        {
-            ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-            return View();
-        }
+            // Try finding user by email first, then fall back to username (supports demo1, etc.)
+            var user = await _userManager.FindByEmailAsync(email.Trim());
+            if (user == null)
+            {
+                user = await _userManager.FindByNameAsync(email.Trim());
+            }
+            if (user == null)
+            {
+                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                return View();
+            }
 
-        var result = await _signInManager.PasswordSignInAsync(user, password, isPersistent: false, lockoutOnFailure: false);
-        if (result.Succeeded)
+            var result = await _signInManager.PasswordSignInAsync(user, password, isPersistent: false, lockoutOnFailure: false);
+            if (result.Succeeded)
         {
             if (user != null)
             {
@@ -232,6 +235,13 @@ public class AccountController : Controller
             ModelState.AddModelError(string.Empty, "Invalid login attempt.");
         }
         return View();
+        }
+        catch (Exception ex)
+        {
+            // Log the full exception for debugging
+            ModelState.AddModelError(string.Empty, $"Login error: {ex.Message}");
+            return View();
+        }
     }
 
     [HttpGet]
@@ -252,24 +262,26 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Register(RegisterStudentViewModel model, string role = "Student")
     {
-        if (!ModelState.IsValid)
+        try
         {
-            ViewBag.Departments = new SelectList(_db.Departments.OrderBy(d => d.Name).ToList(), "Id", "Name", model.DepartmentId);
-            return View(model);
-        }
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Departments = new SelectList(_db.Departments.OrderBy(d => d.Name).ToList(), "Id", "Name", model.DepartmentId);
+                return View(model);
+            }
 
-        var user = new ApplicationUser
-        {
-            UserName = model.Email,
-            Email = model.Email,
-            EmailConfirmed = true,
-            FirstName = model.FirstName.Trim(),
-            LastName = model.LastName.Trim(),
-            CreatedAt = DateTime.UtcNow
-        };
+            var user = new ApplicationUser
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                EmailConfirmed = true,
+                FirstName = model.FirstName.Trim(),
+                LastName = model.LastName.Trim(),
+                CreatedAt = DateTime.UtcNow
+            };
 
-        var result = await _userManager.CreateAsync(user, model.Password);
-        if (result.Succeeded)
+            var result = await _userManager.CreateAsync(user, model.Password);
+            if (result.Succeeded)
         {
             // Ensure requested role exists; if not, fall back to Student
             if (!await _userManager.IsInRoleAsync(user, role))
@@ -379,6 +391,13 @@ public class AccountController : Controller
             ModelState.AddModelError(string.Empty, error.Description);
         }
         return View(model);
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError(string.Empty, $"Registration error: {ex.Message}");
+            ViewBag.Departments = new SelectList(_db.Departments.OrderBy(d => d.Name).ToList(), "Id", "Name", model.DepartmentId);
+            return View(model);
+        }
     }
 
     [HttpPost]
@@ -409,60 +428,69 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RegisterInstructor(InstructorRegisterViewModel model)
     {
-        var invite = _config["Registration:InstructorInviteCode"];
-        if (string.IsNullOrWhiteSpace(invite))
+        try
         {
-            ModelState.AddModelError(string.Empty, "Instructor registration is disabled.");
-        }
-        else if (!string.Equals(model.AccessCode?.Trim(), invite?.Trim(), StringComparison.Ordinal))
-        {
-            ModelState.AddModelError(nameof(model.AccessCode), "Invalid access code.");
-        }
+            var invite = _config["Registration:InstructorInviteCode"];
+            if (string.IsNullOrWhiteSpace(invite))
+            {
+                ModelState.AddModelError(string.Empty, "Instructor registration is disabled.");
+            }
+            else if (!string.Equals(model.AccessCode?.Trim(), invite?.Trim(), StringComparison.Ordinal))
+            {
+                ModelState.AddModelError(nameof(model.AccessCode), "Invalid access code.");
+            }
 
-        if (!ModelState.IsValid)
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Departments = new SelectList(_db.Departments.OrderBy(d => d.Name).ToList(), "Id", "Name", model.DepartmentId);
+                return View(model);
+            }
+
+            var user = new ApplicationUser
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                EmailConfirmed = true,
+                FirstName = model.FirstName.Trim(),
+                LastName = model.LastName.Trim(),
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+            if (!result.Succeeded)
+            {
+                foreach (var e in result.Errors)
+                    ModelState.AddModelError(string.Empty, e.Description);
+                ViewBag.Departments = new SelectList(_db.Departments.OrderBy(d => d.Name).ToList(), "Id", "Name", model.DepartmentId);
+                return View(model);
+            }
+
+            // Role & Instructor entity
+            await _userManager.AddToRoleAsync(user, "Instructor");
+
+            var dept = _db.Departments.FirstOrDefault(d => d.Id == model.DepartmentId) ?? _db.Departments.First();
+            var instructor = new Instructor
+            {
+                UserId = user.Id,
+                FirstName = user.FirstName ?? "Instructor",
+                LastName = user.LastName ?? "User",
+                Email = user.Email ?? user.UserName ?? model.Email,
+                DepartmentId = dept.Id
+            };
+            _db.Instructors.Add(instructor);
+            await _db.SaveChangesAsync();
+            user.InstructorId = instructor.Id;
+            await _userManager.UpdateAsync(user);
+
+            await _signInManager.SignInAsync(user, isPersistent: false);
+            return RedirectToAction("Index", "InstructorDashboard");
+        }
+        catch (Exception ex)
         {
+            ModelState.AddModelError(string.Empty, $"Instructor registration error: {ex.Message}");
             ViewBag.Departments = new SelectList(_db.Departments.OrderBy(d => d.Name).ToList(), "Id", "Name", model.DepartmentId);
             return View(model);
         }
-
-        var user = new ApplicationUser
-        {
-            UserName = model.Email,
-            Email = model.Email,
-            EmailConfirmed = true,
-            FirstName = model.FirstName.Trim(),
-            LastName = model.LastName.Trim(),
-            CreatedAt = DateTime.UtcNow
-        };
-
-        var result = await _userManager.CreateAsync(user, model.Password);
-        if (!result.Succeeded)
-        {
-            foreach (var e in result.Errors)
-                ModelState.AddModelError(string.Empty, e.Description);
-            ViewBag.Departments = new SelectList(_db.Departments.OrderBy(d => d.Name).ToList(), "Id", "Name", model.DepartmentId);
-            return View(model);
-        }
-
-        // Role & Instructor entity
-        await _userManager.AddToRoleAsync(user, "Instructor");
-
-        var dept = _db.Departments.FirstOrDefault(d => d.Id == model.DepartmentId) ?? _db.Departments.First();
-        var instructor = new Instructor
-        {
-            UserId = user.Id,
-            FirstName = user.FirstName ?? "Instructor",
-            LastName = user.LastName ?? "User",
-            Email = user.Email ?? user.UserName ?? model.Email,
-            DepartmentId = dept.Id
-        };
-        _db.Instructors.Add(instructor);
-        await _db.SaveChangesAsync();
-        user.InstructorId = instructor.Id;
-        await _userManager.UpdateAsync(user);
-
-        await _signInManager.SignInAsync(user, isPersistent: false);
-        return RedirectToAction("Index", "InstructorDashboard");
     }
 
     // --- Diagnostics endpoint: quickly view role/profile linkage for current user ---
