@@ -22,6 +22,7 @@ public class StudentDashboardViewModel
     public List<decimal> GradeData { get; set; } = new();
     public List<string> CourseLabels { get; set; } = new();
     public List<decimal> CoursePerformance { get; set; } = new();
+    public List<int> CreditsPerTerm { get; set; } = new(); // Credits earned per term, aligned with CourseLabels
     
     // Radar Chart - Skills/Competencies across subjects
     public RadarChartData? SkillRadarData { get; set; }

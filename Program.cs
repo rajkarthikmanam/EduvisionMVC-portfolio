@@ -183,11 +183,31 @@ app.MapGet("/api/charts/gradesByCourse", async (AppDbContext db) =>
 // --- Minimal Admin Dashboard APIs (bypass MVC to avoid pipeline issues) ---
 app.MapGet("/api/dashboard/admin/trend2", async (AppDbContext db) =>
 {
+    int TermOrder(string? term)
+    {
+        if (string.IsNullOrWhiteSpace(term)) return int.MaxValue;
+        var parts = term.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length >= 2 && int.TryParse(parts[^1], out var year))
+        {
+            var season = string.Join(' ', parts.Take(parts.Length - 1)).ToLowerInvariant();
+            var seasonVal = season switch
+            {
+                "winter" => 0,
+                "spring" => 1,
+                "summer" => 2,
+                "fall" => 3,
+                _ => 9
+            };
+            return year * 10 + seasonVal;
+        }
+        return int.MaxValue - 1;
+    }
+
     var terms = await db.Enrollments.Select(e => e.Term).ToListAsync();
     var grouped = terms
         .GroupBy(t => t)
         .Select(g => new { term = g.Key ?? "(unknown)", count = g.Count() })
-        .OrderBy(x => x.term)
+        .OrderBy(x => TermOrder(x.term))
         .ToList();
 
     return Results.Json(new

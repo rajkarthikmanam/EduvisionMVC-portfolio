@@ -49,14 +49,33 @@ namespace EduvisionMvc.Controllers
         {
             try
             {
-                // Load all terms into memory first
+                // Load terms and group in-memory, then order Spring, Summer, Fall by year
                 var allTerms = await _db.Enrollments.Select(e => e.Term).ToListAsync();
-                
-                // Group in-memory using LINQ
+
+                int TermOrder(string? term)
+                {
+                    if (string.IsNullOrWhiteSpace(term)) return int.MaxValue;
+                    var parts = term.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    if (parts.Length >= 2 && int.TryParse(parts[^1], out var year))
+                    {
+                        var season = string.Join(' ', parts.Take(parts.Length - 1)).ToLowerInvariant();
+                        var seasonVal = season switch
+                        {
+                            "winter" => 0,
+                            "spring" => 1,
+                            "summer" => 2,
+                            "fall" => 3,
+                            _ => 9
+                        };
+                        return year * 10 + seasonVal;
+                    }
+                    return int.MaxValue - 1;
+                }
+
                 var grouped = allTerms
                     .GroupBy(t => t)
                     .Select(g => new { term = g.Key, count = g.Count() })
-                    .OrderBy(x => x.term)
+                    .OrderBy(x => TermOrder(x.term))
                     .ToList();
 
                 var labels = grouped.Select(x => x.term).ToArray();

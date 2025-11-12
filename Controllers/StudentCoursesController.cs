@@ -31,15 +31,24 @@ public class StudentCoursesController : Controller
 
         var currentTerm = GetCurrentTerm();
 
-        // Get enrolled course IDs (no need to check for Dropped since they're deleted)
+        // Get enrolled course IDs for current term (no need to check for Dropped since they're deleted)
         var enrolledCourseIds = await _db.Enrollments
             .Where(e => e.StudentId == student.Id && e.Term == currentTerm)
             .Select(e => e.CourseId)
             .ToListAsync();
 
+        // Get course IDs that student has already completed (has a grade)
+        var completedCourseIds = await _db.Enrollments
+            .Where(e => e.StudentId == student.Id && e.NumericGrade.HasValue && e.Status == EnrollmentStatus.Completed)
+            .Select(e => e.CourseId)
+            .ToListAsync();
+
+        // Combine both lists - exclude courses that are already enrolled OR already completed
+        var excludedCourseIds = enrolledCourseIds.Concat(completedCourseIds).Distinct().ToList();
+
         var query = _db.Courses
             .Include(c => c.Department)
-            .Where(c => !enrolledCourseIds.Contains(c.Id));
+            .Where(c => !excludedCourseIds.Contains(c.Id));
 
         if (student.DepartmentId.HasValue)
         {
@@ -95,6 +104,20 @@ public class StudentCoursesController : Controller
 
         var term = GetCurrentTerm();
         Console.WriteLine($"[ENROLL] Current term: {term}");
+
+        // Check if student already completed this course in any previous term
+        var hasCompletedCourse = await _db.Enrollments.AnyAsync(e => 
+            e.StudentId == student.Id 
+            && e.CourseId == courseId 
+            && e.NumericGrade.HasValue 
+            && e.Status == EnrollmentStatus.Completed);
+
+        if (hasCompletedCourse)
+        {
+            Console.WriteLine("[ENROLL] Student already completed this course");
+            TempData["EnrollMessage"] = $"You have already completed {course.Code}. Students cannot retake completed courses.";
+            return RedirectToAction("Index");
+        }
 
         // Check if enrollment exists for this student, course, and term
         var existingEnrollment = await _db.Enrollments.FirstOrDefaultAsync(e => 

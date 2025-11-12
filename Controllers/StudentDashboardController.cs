@@ -105,7 +105,28 @@ public class StudentDashboardController : Controller
 
         // Group enrollments by term for the enrollment trend chart (all 3 terms)
         // Ensure all 3 terms are included even if they have 0 enrollments
-        var allTerms = new[] { "Spring 2025", "Summer 2025", "Fall 2025" };
+        // Determine distinct terms from enrollments, then order Spring, Summer, Fall within each year
+        var distinctTerms = enrollments.Select(e => e.Term).Where(t => !string.IsNullOrWhiteSpace(t)).Distinct().ToList();
+        int TermOrder(string? term)
+        {
+            if (string.IsNullOrWhiteSpace(term)) return int.MaxValue;
+            var parts = term.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (parts.Length >= 2 && int.TryParse(parts[^1], out var year))
+            {
+                var season = string.Join(' ', parts.Take(parts.Length - 1)).ToLowerInvariant();
+                var seasonVal = season switch
+                {
+                    "winter" => 0,
+                    "spring" => 1,
+                    "summer" => 2,
+                    "fall" => 3,
+                    _ => 9
+                };
+                return year * 10 + seasonVal;
+            }
+            return int.MaxValue - 1;
+        }
+        var allTerms = distinctTerms.OrderBy(TermOrder).ToArray();
         var termEnrollments = enrollments
             .Where(e => e.Course != null && e.Status != EnrollmentStatus.Dropped)
             .GroupBy(e => e.Term)
@@ -139,6 +160,8 @@ public class StudentDashboardController : Controller
             // Course performance - show all 3 terms
             CourseLabels = termGroups.Select(t => t.Term).ToList(),
             CoursePerformance = termGroups.Select(t => (decimal)t.Count).ToList(),
+            // Pass credits per term to the view
+            CreditsPerTerm = termGroups.Select(t => t.Credits).ToList(),
             
             // Top Performance: Only the single highest grade course
             TopCourses = completedEnrollments

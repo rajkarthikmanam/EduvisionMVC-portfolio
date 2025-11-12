@@ -340,17 +340,8 @@
         const terms = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CourseLabels));
         const courseCounts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CoursePerformance));
         
-        // Calculate credits per term from all enrollments
-        @{
-            var creditsByTerm = (Model.AllEnrollments ?? new List<Enrollment>())
-                .Where(e => e.Course != null)
-                .GroupBy(e => e.Term)
-                .OrderBy(g => g.Key == "Spring 2025" ? 1 : g.Key == "Summer 2025" ? 2 : 3)
-                .Select(g => new { Term = g.Key, Credits = g.Sum(e => e.Course!.Credits) })
-                .ToList();
-        }
-        const allEnrollments = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(creditsByTerm));
-        const credits = allEnrollments.map(t => t.credits || 0);
+        // Use the credits per term directly from the model (already calculated and ordered correctly)
+        const credits = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CreditsPerTerm));
         
         enrollmentHistoryChart = new Chart(enrollmentHistoryCtx, {
             type: 'line',
