@@ -115,13 +115,17 @@ if (app.Environment.IsDevelopment())
     IdentitySeeder.SeedAsync(app.Services).GetAwaiter().GetResult();
 }
 
-// --- Seed richer LMS domain data ---
-// DISABLED: Uncomment only for initial setup, otherwise data gets reset on every restart
-// using (var scope2 = app.Services.CreateScope())
-// {
-//     var db2 = scope2.ServiceProvider.GetRequiredService<AppDbContext>();
-//     LmsDataSeeder.SeedAsync(db2).GetAwaiter().GetResult();
-// }
+// --- Seed sample data (5 rows per table) in Development ---
+if (app.Environment.IsDevelopment())
+{
+    using (var scope2 = app.Services.CreateScope())
+    {
+        var db2 = scope2.ServiceProvider.GetRequiredService<AppDbContext>();
+        var userMgr = scope2.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var roleMgr = scope2.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        SampleDataSeeder.SeedAsync(db2, userMgr, roleMgr).GetAwaiter().GetResult();
+    }
+}
 
 // --- Middleware ---
 if (!app.Environment.IsDevelopment())
