@@ -23,6 +23,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Ensure source files under the local publish folder are NOT compiled, to avoid duplicate migration classes -->
+    <Compile Remove="publish\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="Migrations\**\*.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
