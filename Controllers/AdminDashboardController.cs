@@ -43,9 +43,10 @@ public class AdminDashboardController : Controller
 
             _logger.LogInformation("Basic counts retrieved");
 
-            // Roles distribution
+            // Roles distribution - materialize roles first to avoid multiple active readers
             var roleDistribution = new List<RoleCount>();
-            foreach (var role in _roleManager.Roles)
+            var allRoles = await _roleManager.Roles.ToListAsync();
+            foreach (var role in allRoles)
             {
                 var usersInRole = await _userManager.GetUsersInRoleAsync(role.Name!);
                 roleDistribution.Add(new RoleCount { Role = role.Name!, Count = usersInRole.Count });
