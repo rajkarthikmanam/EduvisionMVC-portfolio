@@ -22,17 +22,23 @@ namespace EduvisionMvc.Controllers
 
         // Simple test endpoint
         [HttpGet("test")]
-        public IActionResult Test()
+        public async Task<IActionResult> Test()
         {
             try
             {
-                var count = _db.Enrollments.Count();
-                return Ok(new { message = "API working", enrollmentCount = count, timestamp = DateTime.UtcNow });
+                var count = await _db.Enrollments.CountAsync();
+                var terms = await _db.Enrollments.Select(e => e.Term).Distinct().ToListAsync();
+                return Ok(new { 
+                    message = "API working", 
+                    enrollmentCount = count, 
+                    distinctTerms = terms,
+                    timestamp = DateTime.UtcNow 
+                });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Test endpoint failed");
-                return StatusCode(500, new { error = ex.Message, type = ex.GetType().Name });
+                return StatusCode(500, new { error = ex.Message, type = ex.GetType().Name, stack = ex.StackTrace });
             }
         }
 
