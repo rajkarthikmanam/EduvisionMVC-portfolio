@@ -175,4 +175,58 @@ app.MapGet("/api/charts/gradesByCourse", async (AppDbContext db) =>
     });
 });
 
+// --- Minimal Admin Dashboard APIs (bypass MVC to avoid pipeline issues) ---
+app.MapGet("/api/dashboard/admin/trend2", async (AppDbContext db) =>
+{
+    var terms = await db.Enrollments.Select(e => e.Term).ToListAsync();
+    var grouped = terms
+        .GroupBy(t => t)
+        .Select(g => new { term = g.Key ?? "(unknown)", count = g.Count() })
+        .OrderBy(x => x.term)
+        .ToList();
+
+    return Results.Json(new
+    {
+        labels = grouped.Select(x => x.term).ToArray(),
+        data = grouped.Select(x => x.count).ToArray()
+    });
+});
+
+app.MapGet("/api/dashboard/admin/departments2", async (AppDbContext db) =>
+{
+    var departments = await db.Departments.Include(d => d.Courses).ToListAsync();
+    var data = departments
+        .Select(d => new { dept = d.Code, count = d.Courses.Count })
+        .OrderByDescending(x => x.count)
+        .ToList();
+    return Results.Json(data);
+});
+
+app.MapGet("/api/dashboard/admin/capacity2", async (AppDbContext db) =>
+{
+    var courses = await db.Courses.Include(c => c.Enrollments).ToListAsync();
+    var labels = courses.Select(c => c.Code).ToArray();
+    var current = courses
+        .Select(c => c.Enrollments.Count(e => e.Term == "Fall 2025" && (e.Status == EduvisionMvc.Models.EnrollmentStatus.Approved || e.Status == EduvisionMvc.Models.EnrollmentStatus.Pending)))
+        .ToArray();
+    var capacity = courses.Select(c => c.Capacity).ToArray();
+
+    var alerts = courses
+        .Where(c => c.Capacity > 0)
+        .Select(c => new
+        {
+            code = c.Code,
+            title = c.Title,
+            capacity = c.Capacity,
+            current = c.Enrollments.Count(e => e.Term == "Fall 2025" && (e.Status == EduvisionMvc.Models.EnrollmentStatus.Approved || e.Status == EduvisionMvc.Models.EnrollmentStatus.Pending)),
+            util = c.Capacity == 0 ? 0 : (int)Math.Round(100.0 * c.Enrollments.Count(e => e.Term == "Fall 2025" && (e.Status == EduvisionMvc.Models.EnrollmentStatus.Approved || e.Status == EduvisionMvc.Models.EnrollmentStatus.Pending)) / c.Capacity)
+        })
+        .Where(a => a.util >= 80)
+        .OrderByDescending(a => a.util)
+        .Take(25)
+        .ToList();
+
+    return Results.Json(new { labels, current, capacity, alerts });
+});
+
 app.Run();
