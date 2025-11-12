@@ -390,12 +390,12 @@ namespace EduvisionMvc.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Instructors", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Instructors_Departments_DepartmentId",
-                        column: x => x.DepartmentId,
-                        principalTable: "Departments",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        table.ForeignKey(
+                            name: "FK_Instructors_Departments_DepartmentId",
+                            column: x => x.DepartmentId,
+                            principalTable: "Departments",
+                            principalColumn: "Id",
+                            onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -826,7 +826,7 @@ namespace EduvisionMvc.Migrations
                 column: "ChairId",
                 principalTable: "Instructors",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                onDelete: ReferentialAction.Restrict);
         }
 
         /// <inheritdoc />

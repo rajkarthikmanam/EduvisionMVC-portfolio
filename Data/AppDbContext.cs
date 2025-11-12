@@ -61,6 +61,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> opts) : IdentityDbConte
             .WithOne(u => u.Instructor)
             .HasForeignKey<ApplicationUser>(u => u.InstructorId);
 
+        // Break potential multiple cascade paths: when a Department is deleted,
+        // do NOT cascade delete Instructors (restrict instead). This prevents a
+        // second cascading path reaching Students through AdvisorInstructor.
+        b.Entity<Instructor>()
+            .HasOne(i => i.Department)
+            .WithMany()
+            .HasForeignKey(i => i.DepartmentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // Unique Email for Instructor test identity mapping
         b.Entity<Instructor>()
             .HasIndex(i => i.Email)
@@ -80,12 +89,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> opts) : IdentityDbConte
             .HasForeignKey(s => s.AdvisorInstructorId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        // Department chair (optional)
+        // Department chair (optional) - restrict deletion of an Instructor who is a Chair
+        // to avoid multiple cascade paths (Instructor -> Students via Advisor AND via Department)
         b.Entity<Department>()
             .HasOne(d => d.Chair)
             .WithMany()
             .HasForeignKey(d => d.ChairId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Configure Enrollment relationships
         b.Entity<Enrollment>()
