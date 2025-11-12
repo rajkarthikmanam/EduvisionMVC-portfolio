@@ -1,15 +1,10 @@
-name: Deploy to Azure App Service
+name: Deploy to Azure App Service (Publish Profile)
 
 on:
   push:
     branches:
       - main
   workflow_dispatch:
-
-# Required for OIDC-based Azure login
-permissions:
-  id-token: write
-  contents: read
 
 env:
   DOTNET_VERSION: '9.0.x'
@@ -18,7 +13,7 @@ env:
 jobs:
   build-and-deploy:
     runs-on: windows-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -41,49 +36,28 @@ jobs:
       shell: pwsh
       run: |
         $webConfigPath = "publish/web.config"
+        if (-not (Test-Path $webConfigPath)) { Write-Error "web.config not found in publish output"; exit 1 }
         [xml]$webConfig = Get-Content $webConfigPath
-        
-        # Find or create environmentVariables section
         $envVars = $webConfig.SelectSingleNode("//environmentVariables")
-        if ($null -eq $envVars) {
-          $aspNetCore = $webConfig.SelectSingleNode("//aspNetCore")
-          $envVars = $webConfig.CreateElement("environmentVariables")
-          $aspNetCore.AppendChild($envVars) | Out-Null
-        }
-        
-        # Set Production environment
+        if ($null -eq $envVars) { $aspNetCore = $webConfig.SelectSingleNode("//aspNetCore"); $envVars = $webConfig.CreateElement("environmentVariables"); $aspNetCore.AppendChild($envVars) | Out-Null }
         $envVar = $webConfig.SelectSingleNode("//environmentVariable[@name='ASPNETCORE_ENVIRONMENT']")
-        if ($null -eq $envVar) {
-          $envVar = $webConfig.CreateElement("environmentVariable")
-          $envVar.SetAttribute("name", "ASPNETCORE_ENVIRONMENT")
-          $envVars.AppendChild($envVar) | Out-Null
-        }
-        $envVar.SetAttribute("value", "Production")
-        
-        # Enable stdout logging
+        if ($null -eq $envVar) { $envVar = $webConfig.CreateElement("environmentVariable"); $envVar.SetAttribute("name","ASPNETCORE_ENVIRONMENT"); $envVars.AppendChild($envVar) | Out-Null }
+        $envVar.SetAttribute("value","Production")
         $aspNetCore = $webConfig.SelectSingleNode("//aspNetCore")
-        $aspNetCore.SetAttribute("stdoutLogEnabled", "true")
-        $aspNetCore.SetAttribute("stdoutLogFile", ".\logs\stdout")
-        
+        $aspNetCore.SetAttribute("stdoutLogEnabled","true")
+        $aspNetCore.SetAttribute("stdoutLogFile",".\\logs\\stdout")
         $webConfig.Save($webConfigPath)
-        Write-Host "web.config updated for Production environment"
+        Write-Host "web.config updated for Production"
 
-    - name: Azure login (OIDC)
-      uses: azure/login@v2
-      with:
-        client-id: ${{ secrets.AZURE_CLIENT_ID }}
-        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-    - name: Deploy to Azure Web App
+    - name: Deploy to Azure Web App (Publish Profile)
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: ./publish
 
     - name: Deployment summary
       run: |
-        echo "✅ Deployment completed (OIDC)"
-        echo "📦 Package includes migrations and Production web.config"
+        echo "✅ Deployment completed (Publish Profile)"
         echo "🔗 App URL: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
-        echo "➡️ Check Azure App Service -> Log stream for migration output"
+        echo "➡️ Next: Verify connection string + migrations in Log Stream"
