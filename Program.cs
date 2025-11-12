@@ -101,6 +101,11 @@ if (app.Environment.IsProduction())
 
         // Seed roles and users if needed
         IdentitySeeder.SeedAsync(scope.ServiceProvider).GetAwaiter().GetResult();
+
+        // Seed sample data for dashboard visibility (5 rows per table)
+        var userMgr = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var roleMgr = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        SampleDataSeeder.SeedAsync(db, userMgr, roleMgr).GetAwaiter().GetResult();
     }
     catch (Exception ex)
     {

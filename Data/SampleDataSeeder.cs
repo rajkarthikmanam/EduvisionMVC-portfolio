@@ -8,14 +8,14 @@ public static class SampleDataSeeder
 {
     public static async Task SeedAsync(AppDbContext db, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
     {
-        // Only seed if we have less than 5 departments (allow IdentitySeeder's single dept)
-        if (await db.Departments.CountAsync() >= 5) return;
+        // Only seed if we have less than 5 departments
+        var deptCount = await db.Departments.CountAsync();
+        if (deptCount >= 5) return;
 
-        // Clear existing sample data to reseed fresh 5 rows
-        var existingDepts = await db.Departments.ToListAsync();
-        if (existingDepts.Any())
+        // If we have 1 dept from IdentitySeeder but need 5, clear and reseed all
+        if (deptCount > 0 && deptCount < 5)
         {
-            // Remove orphan enrollments, courses, instructors, students tied to existing depts
+            var existingDepts = await db.Departments.ToListAsync();
             var deptIds = existingDepts.Select(d => d.Id).ToList();
             var oldCourses = await db.Courses.Where(c => deptIds.Contains(c.DepartmentId)).ToListAsync();
             var oldCourseIds = oldCourses.Select(c => c.Id).ToList();
