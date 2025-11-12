@@ -6,6 +6,11 @@ on:
       - main
   workflow_dispatch:
 
+# Required for OIDC-based Azure login
+permissions:
+  id-token: write
+  contents: read
+
 env:
   DOTNET_VERSION: '9.0.x'
   AZURE_WEBAPP_NAME: 'eduvision-app'  # Replace with your Azure App Service name
@@ -63,25 +68,22 @@ jobs:
         $webConfig.Save($webConfigPath)
         Write-Host "web.config updated for Production environment"
 
+    - name: Azure login (OIDC)
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: ./publish
 
     - name: Deployment summary
       run: |
-        echo "✅ Deployment completed successfully!"
-        echo "📦 Package created with:"
-        echo "  - Migrations folder included"
-        echo "  - NumericGrade property (not Numeric_Grade)"
-        echo "  - SQL Server provider for Production"
-        echo "  - Automatic migration on startup"
-        echo ""
+        echo "✅ Deployment completed (OIDC)"
+        echo "📦 Package includes migrations and Production web.config"
         echo "🔗 App URL: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
-        echo ""
-        echo "⚠️ Next steps:"
-        echo "1. Verify Azure SQL connection string is configured in App Service settings"
-        echo "2. Monitor deployment logs in Azure Portal"
-        echo "3. Check application logs for migration execution"
+        echo "➡️ Check Azure App Service -> Log stream for migration output"
