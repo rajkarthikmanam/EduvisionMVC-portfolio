@@ -31,9 +31,9 @@ public class AdminDashboardController : Controller
         var totalCourses = await _db.Courses.CountAsync();
         var activeEnrollments = await _db.Enrollments.CountAsync(e => e.Term == "Fall 2025" && (e.Status == EnrollmentStatus.Approved || e.Status == EnrollmentStatus.Pending) && e.NumericGrade == null);
         var avgGpa = await _db.Students.Where(s => s.Gpa > 0).Select(s => s.Gpa).DefaultIfEmpty().AverageAsync();
-        var materialsCount = await _db.CourseMaterials.CountAsync();
-        var discussionsCount = await _db.Discussions.CountAsync();
-        var assignmentsCount = await _db.Assignments.CountAsync();
+        var materialsCount = 0; // CourseMaterials table doesn't exist yet
+        var discussionsCount = 0; // Discussions table doesn't exist yet
+        var assignmentsCount = 0; // Assignments table doesn't exist yet
 
         // Roles distribution
         var roleDistribution = new List<RoleCount>();
@@ -72,18 +72,8 @@ public class AdminDashboardController : Controller
             .Take(10)
             .ToList();
 
-        // Recent notifications (last 10)
-        var recentNotifications = await _db.Notifications
-            .Include(n => n.User)
-            .OrderByDescending(n => n.CreatedAt)
-            .Take(10)
-            .Select(n => new RecentNotificationSummary
-            {
-                UserEmail = n.User!.Email ?? n.User!.UserName ?? "(unknown)",
-                Message = n.Message,
-                CreatedAt = n.CreatedAt
-            })
-            .ToListAsync();
+        // Recent notifications (last 10) - table doesn't exist yet
+        var recentNotifications = new List<RecentNotificationSummary>();
 
         // Scatter chart data computed in-memory
         var courseCapacityData = courses
