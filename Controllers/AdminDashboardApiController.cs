@@ -43,11 +43,17 @@ namespace EduvisionMvc.Controllers
         {
             try
             {
-                // Group by Term; attempt a basic chronological sort by parsing year then term prefix
-                var raw = await _db.Enrollments
-                    .GroupBy(e => e.Term)
+                _logger.LogInformation("GetEnrollmentTrend started");
+                
+                // Load all enrollments, then group in-memory to avoid SQL translation issues
+                var enrollments = await _db.Enrollments.Select(e => e.Term).ToListAsync();
+                
+                var raw = enrollments
+                    .GroupBy(term => term)
                     .Select(g => new { term = g.Key!, count = g.Count() })
-                    .ToListAsync();
+                    .ToList();
+
+                _logger.LogInformation("Retrieved {Count} term groups", raw.Count);
 
                 int TermOrder(string term)
                 {
@@ -74,11 +80,13 @@ namespace EduvisionMvc.Controllers
                 var labels = ordered.Select(x => x.term).ToArray();
                 var data = ordered.Select(x => x.count).ToArray();
 
+                _logger.LogInformation("Returning {LabelCount} labels", labels.Length);
                 return Ok(new { labels, data });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { error = ex.Message, stack = ex.StackTrace, type = ex.GetType().Name });
+                _logger.LogError(ex, "GetEnrollmentTrend failed");
+                return StatusCode(500, new { error = ex.Message, stack = ex.StackTrace, type = ex.GetType().Name, innerError = ex.InnerException?.Message });
             }
         }
 
