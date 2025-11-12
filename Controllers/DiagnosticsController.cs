@@ -53,6 +53,31 @@ public class DiagnosticsController : Controller
     }
 
     [AllowAnonymous]
+    public async Task<IActionResult> ForceSeed()
+    {
+        try
+        {
+            var roleMgr = HttpContext.RequestServices.GetRequiredService<RoleManager<IdentityRole>>();
+            await Data.SampleDataSeeder.SeedAsync(_context, _userManager, roleMgr);
+            
+            var counts = new
+            {
+                Departments = await _context.Departments.CountAsync(),
+                Instructors = await _context.Instructors.CountAsync(),
+                Students = await _context.Students.CountAsync(),
+                Courses = await _context.Courses.CountAsync(),
+                Enrollments = await _context.Enrollments.CountAsync()
+            };
+            
+            return Json(new { Status = "Success", Message = "Seed completed", Counts = counts });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { Status = "Error", Message = ex.Message, Stack = ex.StackTrace, Inner = ex.InnerException?.Message });
+        }
+    }
+
+    [AllowAnonymous]
     public IActionResult Env()
     {
         var connString = _config.GetConnectionString("DefaultConnection") ?? "NOT SET";
