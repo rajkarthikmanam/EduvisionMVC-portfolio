@@ -12,10 +12,28 @@ namespace EduvisionMvc.Controllers
     public class AdminDashboardApiController : ControllerBase
     {
         private readonly AppDbContext _db;
+        private readonly ILogger<AdminDashboardApiController> _logger;
 
-        public AdminDashboardApiController(AppDbContext db)
+        public AdminDashboardApiController(AppDbContext db, ILogger<AdminDashboardApiController> logger)
         {
             _db = db;
+            _logger = logger;
+        }
+
+        // Simple test endpoint
+        [HttpGet("test")]
+        public IActionResult Test()
+        {
+            try
+            {
+                var count = _db.Enrollments.Count();
+                return Ok(new { message = "API working", enrollmentCount = count, timestamp = DateTime.UtcNow });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Test endpoint failed");
+                return StatusCode(500, new { error = ex.Message, type = ex.GetType().Name });
+            }
         }
 
         // GET: /api/dashboard/admin/trend
