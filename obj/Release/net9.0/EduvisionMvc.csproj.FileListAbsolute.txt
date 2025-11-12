@@ -4,9 +4,6 @@ C:\Users\manam\Downloads\EduVisionMVC-Portfolio\bin\Release\net9.0\App_Data\prov
 C:\Users\manam\Downloads\EduVisionMVC-Portfolio\bin\Release\net9.0\Data\education_seed.json
 C:\Users\manam\Downloads\EduVisionMVC-Portfolio\bin\Release\net9.0\EduvisionMvc.staticwebassets.runtime.json
 C:\Users\manam\Downloads\EduVisionMVC-Portfolio\bin\Release\net9.0\EduvisionMvc.staticwebassets.endpoints.json
-C:\Users\manam\Downloads\EduVisionMVC-Portfolio\bin\Release\net9.0\Migrations\20251112015350_InitialCreate.cs
-C:\Users\manam\Downloads\EduVisionMVC-Portfolio\bin\Release\net9.0\Migrations\20251112015350_InitialCreate.Designer.cs
-C:\Users\manam\Downloads\EduVisionMVC-Portfolio\bin\Release\net9.0\Migrations\AppDbContextModelSnapshot.cs
 C:\Users\manam\Downloads\EduVisionMVC-Portfolio\bin\Release\net9.0\EduvisionMvc.exe
 C:\Users\manam\Downloads\EduVisionMVC-Portfolio\bin\Release\net9.0\EduvisionMvc.deps.json
 C:\Users\manam\Downloads\EduVisionMVC-Portfolio\bin\Release\net9.0\EduvisionMvc.runtimeconfig.json
@@ -271,3 +268,5 @@ C:\Users\manam\Downloads\EduVisionMVC-Portfolio\obj\Release\net9.0\refint\Eduvis
 C:\Users\manam\Downloads\EduVisionMVC-Portfolio\obj\Release\net9.0\EduvisionMvc.pdb
 C:\Users\manam\Downloads\EduVisionMVC-Portfolio\obj\Release\net9.0\EduvisionMvc.genruntimeconfig.cache
 C:\Users\manam\Downloads\EduVisionMVC-Portfolio\obj\Release\net9.0\ref\EduvisionMvc.dll
+c:\Users\manam\Downloads\EduVisionMVC-Portfolio\bin\Release\net9.0\Migrations\20251112060659_FinalInitialMigration.cs
+c:\Users\manam\Downloads\EduVisionMVC-Portfolio\bin\Release\net9.0\Migrations\20251112060659_FinalInitialMigration.Designer.cs

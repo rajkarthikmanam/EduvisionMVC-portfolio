@@ -136,6 +136,9 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Enable attribute-routed controllers (e.g., /api/... and /dev/... endpoints)
+app.MapControllers();
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
