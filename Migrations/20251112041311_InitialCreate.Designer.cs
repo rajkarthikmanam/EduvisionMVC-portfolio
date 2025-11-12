@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduvisionMvc.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251112015350_InitialCreate")]
+    [Migration("20251112041311_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
