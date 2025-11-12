@@ -8,8 +8,26 @@ public static class SampleDataSeeder
 {
     public static async Task SeedAsync(AppDbContext db, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
     {
-        // Only seed if tables are empty
-        if (await db.Departments.AnyAsync()) return;
+        // Only seed if we have less than 5 departments (allow IdentitySeeder's single dept)
+        if (await db.Departments.CountAsync() >= 5) return;
+
+        // Clear existing sample data to reseed fresh 5 rows
+        var existingDepts = await db.Departments.ToListAsync();
+        if (existingDepts.Any())
+        {
+            // Remove orphan enrollments, courses, instructors, students tied to existing depts
+            var deptIds = existingDepts.Select(d => d.Id).ToList();
+            var oldCourses = await db.Courses.Where(c => deptIds.Contains(c.DepartmentId)).ToListAsync();
+            var oldCourseIds = oldCourses.Select(c => c.Id).ToList();
+            
+            db.Enrollments.RemoveRange(db.Enrollments.Where(e => oldCourseIds.Contains(e.CourseId)));
+            db.CourseInstructors.RemoveRange(db.CourseInstructors.Where(ci => oldCourseIds.Contains(ci.CourseId)));
+            db.Courses.RemoveRange(oldCourses);
+            db.Instructors.RemoveRange(db.Instructors.Where(i => deptIds.Contains(i.DepartmentId)));
+            db.Students.RemoveRange(db.Students.Where(s => s.DepartmentId.HasValue && deptIds.Contains(s.DepartmentId.Value)));
+            db.Departments.RemoveRange(existingDepts);
+            await db.SaveChangesAsync();
+        }
 
         // STEP 1: Create 5 Departments
         var depts = new List<Department>
