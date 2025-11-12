@@ -215,13 +215,19 @@
 
     async function refreshEnrollmentTrend(){
       try {
+        console.log('Fetching enrollment trend...');
         const res = await fetch('/api/dashboard/admin/trend');
-        if(!res.ok) return;
+        console.log('Trend response status:', res.status);
+        if(!res.ok) {
+          console.error('Trend fetch failed:', res.status, res.statusText);
+          return;
+        }
         const json = await res.json();
+        console.log('Trend data:', json);
         enrollmentTrendChart.data.labels = json.labels;
         enrollmentTrendChart.data.datasets[0].data = json.data;
         enrollmentTrendChart.update();
-      } catch(err){ console.warn('Trend update failed', err); }
+      } catch(err){ console.error('Trend update failed', err); }
     }
     refreshEnrollmentTrend();
 
@@ -327,19 +333,31 @@
     // Real-time updates
     async function refreshDepartmentPie(){
       try{
+        console.log('Fetching department distribution...');
         const res = await fetch('/api/dashboard/admin/departments');
-        if(!res.ok) return;
+        console.log('Dept response status:', res.status);
+        if(!res.ok) {
+          console.error('Dept fetch failed:', res.status, res.statusText);
+          return;
+        }
         const json = await res.json();
+        console.log('Dept data:', json);
         departmentPieChart.data.labels = json.map(d=>d.dept);
         departmentPieChart.data.datasets[0].data = json.map(d=>d.count);
         departmentPieChart.update();
-      }catch(err){ console.warn('Dept pie update failed', err); }
+      }catch(err){ console.error('Dept pie update failed', err); }
     }
     async function refreshCapacity(){
       try{
+        console.log('Fetching capacity data...');
         const res = await fetch('/api/dashboard/admin/capacity');
-        if(!res.ok) return;
+        console.log('Capacity response status:', res.status);
+        if(!res.ok) {
+          console.error('Capacity fetch failed:', res.status, res.statusText);
+          return;
+        }
         const json = await res.json();
+        console.log('Capacity data:', json);
         courseCapacityChart.data.labels = json.labels;
         courseCapacityChart.data.datasets[0].data = json.current;
         courseCapacityChart.data.datasets[1].data = json.capacity;
