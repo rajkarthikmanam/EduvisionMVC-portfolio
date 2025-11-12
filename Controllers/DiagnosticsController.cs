@@ -68,6 +68,57 @@ public class DiagnosticsController : Controller
         });
     }
 
+    [AllowAnonymous]
+    public IActionResult Migrations()
+    {
+        try
+        {
+            var pendingMigrations = _context.Database.GetPendingMigrations().ToList();
+            var appliedMigrations = _context.Database.GetAppliedMigrations().ToList();
+            
+            return Json(new
+            {
+                applied = appliedMigrations,
+                pending = pendingMigrations,
+                hasPending = pendingMigrations.Any(),
+                canConnect = _context.Database.CanConnect()
+            });
+        }
+        catch (Exception ex)
+        {
+            return Json(new
+            {
+                error = ex.Message,
+                stackTrace = ex.StackTrace
+            });
+        }
+    }
+
+    [AllowAnonymous]
+    public IActionResult ApplyMigrations()
+    {
+        try
+        {
+            _context.Database.Migrate();
+            return Json(new
+            {
+                success = true,
+                message = "Migrations applied successfully",
+                applied = _context.Database.GetAppliedMigrations().ToList()
+            });
+        }
+        catch (Exception ex)
+        {
+            return Json(new
+            {
+                success = false,
+                error = ex.Message,
+                innerError = ex.InnerException?.Message,
+                stackTrace = ex.StackTrace
+            });
+        }
+    }
+
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CheckStudentLinks()
     {
