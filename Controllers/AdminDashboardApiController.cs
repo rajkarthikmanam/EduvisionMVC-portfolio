@@ -51,19 +51,20 @@ namespace EduvisionMvc.Controllers
             {
                 _logger.LogInformation("GetEnrollmentTrend started");
                 
-                // Load all enrollments, then group in-memory to avoid SQL translation issues
-                var enrollments = await _db.Enrollments.Select(e => e.Term).ToListAsync();
+                // Get distinct terms and count enrollments per term
+                var distinctTerms = await _db.Enrollments.Select(e => e.Term).Distinct().ToListAsync();
                 
-                var raw = enrollments
-                    .GroupBy(term => term)
-                    .Select(g => new { term = g.Key!, count = g.Count() })
-                    .ToList();
+                var raw = new List<dynamic>();
+                foreach (var term in distinctTerms)
+                {
+                    var count = await _db.Enrollments.CountAsync(e => e.Term == term);
+                    raw.Add(new { term, count });
+                }
 
                 _logger.LogInformation("Retrieved {Count} term groups", raw.Count);
 
                 int TermOrder(string term)
                 {
-                    // Expect formats like "Fall 2025", "Spring 2025"; fallback to alphabetical
                     if (string.IsNullOrWhiteSpace(term)) return int.MaxValue;
                     var parts = term.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                     if (parts.Length >= 2 && int.TryParse(parts[^1], out var year))
@@ -83,8 +84,8 @@ namespace EduvisionMvc.Controllers
                 }
 
                 var ordered = raw.OrderBy(x => TermOrder(x.term)).ToList();
-                var labels = ordered.Select(x => x.term).ToArray();
-                var data = ordered.Select(x => x.count).ToArray();
+                var labels = ordered.Select(x => (string)x.term).ToArray();
+                var data = ordered.Select(x => (int)x.count).ToArray();
 
                 _logger.LogInformation("Returning {LabelCount} labels", labels.Length);
                 return Ok(new { labels, data });
