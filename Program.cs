@@ -133,15 +133,9 @@ if (app.Environment.IsDevelopment())
 }
 
 // --- Middleware ---
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
-}
-else
-{
-    app.UseDeveloperExceptionPage();
-}
+// Always use exception handler, never show developer exception page in production deployment
+app.UseExceptionHandler("/Home/Error");
+app.UseHsts();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
