@@ -216,7 +216,7 @@
     async function refreshEnrollmentTrend(){
       try {
         console.log('Fetching enrollment trend...');
-        const res = await fetch('/api/dashboard/admin/trend');
+  const res = await fetch('/api/dashboard/admin/trend2');
         console.log('Trend response status:', res.status);
         if(!res.ok) {
           console.error('Trend fetch failed:', res.status, res.statusText);
@@ -334,7 +334,7 @@
     async function refreshDepartmentPie(){
       try{
         console.log('Fetching department distribution...');
-        const res = await fetch('/api/dashboard/admin/departments');
+  const res = await fetch('/api/dashboard/admin/departments2');
         console.log('Dept response status:', res.status);
         if(!res.ok) {
           console.error('Dept fetch failed:', res.status, res.statusText);
@@ -350,7 +350,7 @@
     async function refreshCapacity(){
       try{
         console.log('Fetching capacity data...');
-        const res = await fetch('/api/dashboard/admin/capacity');
+  const res = await fetch('/api/dashboard/admin/capacity2');
         console.log('Capacity response status:', res.status);
         if(!res.ok) {
           console.error('Capacity fetch failed:', res.status, res.statusText);

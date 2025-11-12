@@ -28,7 +28,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     }
     else
     {
-        options.UseSqlServer(connectionString);
+        // Ensure MARS enabled to avoid DataReader concurrency errors
+        var pattern = @"MultipleActiveResultSets=\s*False";
+        var sqlConn = connectionString.Contains("MultipleActiveResultSets", StringComparison.OrdinalIgnoreCase)
+            ? System.Text.RegularExpressions.Regex.Replace(connectionString, pattern, "MultipleActiveResultSets=True", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+            : connectionString.TrimEnd(';') + ";MultipleActiveResultSets=True";
+        options.UseSqlServer(sqlConn);
     }
 });
 
