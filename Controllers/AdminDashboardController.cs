@@ -29,7 +29,6 @@ public class AdminDashboardController : Controller
         var totalStudents = await _db.Students.CountAsync();
         var totalInstructors = await _db.Instructors.CountAsync();
         var totalCourses = await _db.Courses.CountAsync();
-        // Active = Fall 2025 term, Approved or Pending, no grade
         var activeEnrollments = await _db.Enrollments.CountAsync(e => e.Term == "Fall 2025" && (e.Status == EnrollmentStatus.Approved || e.Status == EnrollmentStatus.Pending) && e.NumericGrade == null);
         var avgGpa = await _db.Students.Where(s => s.Gpa > 0).Select(s => s.Gpa).DefaultIfEmpty().AverageAsync();
         var materialsCount = await _db.CourseMaterials.CountAsync();
@@ -44,9 +43,21 @@ public class AdminDashboardController : Controller
             roleDistribution.Add(new RoleCount { Role = role.Name!, Count = usersInRole.Count });
         }
 
-        // Capacity alerts (courses >= 80% full)
-        var capacityAlerts = await _db.Courses
-            .Include(c => c.Enrollments)
+        // Pre-compute active enrollment counts per course
+        var activeByCourse = await _db.Enrollments
+            .Where(e => e.Term == "Fall 2025" && (e.Status == EnrollmentStatus.Approved || e.Status == EnrollmentStatus.Pending))
+            .GroupBy(e => e.CourseId)
+            .Select(g => new { CourseId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.CourseId, x => x.Count);
+
+        // Base course info
+        var courses = await _db.Courses
+            .Include(c => c.Department)
+            .Select(c => new { c.Id, c.Code, c.Title, c.Capacity, DeptCode = c.Department != null ? c.Department.Code : "N/A" })
+            .ToListAsync();
+
+        // Capacity alerts (>=80%) computed in-memory
+        var capacityAlerts = courses
             .Where(c => c.Capacity > 0)
             .Select(c => new CourseCapacitySummary
             {
@@ -54,12 +65,12 @@ public class AdminDashboardController : Controller
                 Code = c.Code,
                 Title = c.Title,
                 Capacity = c.Capacity,
-                Current = c.Enrollments.Count(e => e.Term == "Fall 2025" && (e.Status == EnrollmentStatus.Approved || e.Status == EnrollmentStatus.Pending))
+                Current = activeByCourse.TryGetValue(c.Id, out var cnt) ? cnt : 0
             })
-            .Where(c => c.Current * 100 / c.Capacity >= 80)
+            .Where(c => c.Capacity > 0 && (c.Current * 100 / c.Capacity) >= 80)
             .OrderByDescending(c => c.Current * 100 / c.Capacity)
             .Take(10)
-            .ToListAsync();
+            .ToList();
 
         // Recent notifications (last 10)
         var recentNotifications = await _db.Notifications
@@ -74,19 +85,23 @@ public class AdminDashboardController : Controller
             })
             .ToListAsync();
 
-        // Scatter chart data: Course Capacity vs Current Enrollment
-        var courseCapacityData = await _db.Courses
-            .Include(c => c.Department)
+        // Scatter chart data computed in-memory
+        var courseCapacityData = courses
             .Where(c => c.Capacity > 0)
-            .Select(c => new ScatterDataPoint
+            .Select(c =>
             {
-                CourseCode = c.Code,
-                DepartmentCode = c.Department != null ? c.Department.Code : "N/A",
-                X = c.Capacity,
-                Y = c.Enrollments.Count(e => e.Term == "Fall 2025" && (e.Status == EnrollmentStatus.Approved || e.Status == EnrollmentStatus.Pending)),
-                UtilizationRate = c.Capacity > 0 ? Math.Round((double)c.Enrollments.Count(e => e.Term == "Fall 2025" && (e.Status == EnrollmentStatus.Approved || e.Status == EnrollmentStatus.Pending)) / c.Capacity * 100, 1) : 0
+                var current = activeByCourse.TryGetValue(c.Id, out var cnt) ? cnt : 0;
+                var util = c.Capacity > 0 ? Math.Round((double)current / c.Capacity * 100.0, 1) : 0.0;
+                return new ScatterDataPoint
+                {
+                    CourseCode = c.Code,
+                    DepartmentCode = c.DeptCode,
+                    X = c.Capacity,
+                    Y = current,
+                    UtilizationRate = util
+                };
             })
-            .ToListAsync();
+            .ToList();
 
         var vm = new AdminDashboardViewModel
         {
