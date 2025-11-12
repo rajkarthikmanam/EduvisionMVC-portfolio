@@ -100,11 +100,11 @@ public static class IdentitySeeder
         // --- Domain seed to link identities to LMS entities ---
         // ONLY create if database is completely empty (first-time setup)
         // Skip if there's already data to preserve user changes
-        if (db.Departments.Any() || db.Students.Any() || db.Courses.Any())
-        {
-            // Data already exists - don't reseed to preserve user changes
-            return;
-        }
+        // DISABLED: Allow SampleDataSeeder to populate instead
+        // if (db.Departments.Any() || db.Students.Any() || db.Courses.Any())
+        // {
+        //     return;
+        // }
 
         // First-time setup only: Ensure a default Department
         var dept = db.Departments.FirstOrDefault(d => d.Name == "Computer Science");
