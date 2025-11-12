@@ -94,12 +94,21 @@ if (app.Environment.IsProduction())
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    
-    // Apply migrations to create/update database schema
-    db.Database.Migrate();
-    
-    // Seed roles and users if needed
-    IdentitySeeder.SeedAsync(scope.ServiceProvider).GetAwaiter().GetResult();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        // Apply migrations to create/update database schema
+        db.Database.Migrate();
+
+        // Seed roles and users if needed
+        IdentitySeeder.SeedAsync(scope.ServiceProvider).GetAwaiter().GetResult();
+    }
+    catch (Exception ex)
+    {
+        // Do not crash the process on startup; log and continue so we can inspect logs via Log Stream
+        logger.LogError(ex, "Failed during Production startup migration/seeding. Application will start without DB being migrated.");
+    }
 }
 
 // --- Seed roles and admin user (Development only - Production seeds during migration block above) ---
