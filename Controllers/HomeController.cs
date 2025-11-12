@@ -19,14 +19,18 @@ public class HomeController : Controller
     public IActionResult Index() => View();
 
     // NEW: Visualization page
+    [AllowAnonymous]
     public IActionResult Visualize() => View();
 
     // NEW: About page
+    [AllowAnonymous]
     public IActionResult About() => View();
 
     // (Optional) keep Privacy or remove if unused
+    [AllowAnonymous]
     public IActionResult Privacy() => View();
 
+    [AllowAnonymous]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
         => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });

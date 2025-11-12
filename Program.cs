@@ -68,10 +68,8 @@ builder.Services.AddScoped<IAuthorizationHandler, AdminProtectionHandler>();
 
 builder.Services.AddAuthorization(options =>
 {
-    // GLOBAL POLICY: Require authentication by default for ALL endpoints
-    options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
-        .RequireAuthenticatedUser()
-        .Build();
+    // NOTE: No global FallbackPolicy - controllers use [Authorize] or [AllowAnonymous] explicitly
+    // This prevents redirect loops on Login/Register pages
     
     // Role-based policies
     options.AddPolicy("RequireAdmin", policy => policy.RequireRole("Admin"));
