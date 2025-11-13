@@ -25,8 +25,21 @@ public class StudentCoursesController : Controller
     {
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return Challenge();
-
-        var student = await _db.Students.FirstOrDefaultAsync(s => s.UserId == user.Id);
+        // Robust student lookup: prefer StudentId link, then fallback to UserId
+        Student? student = null;
+        if (user.StudentId.HasValue)
+        {
+            student = await _db.Students.FirstOrDefaultAsync(s => s.Id == user.StudentId.Value);
+        }
+        if (student == null)
+        {
+            student = await _db.Students.FirstOrDefaultAsync(s => s.UserId == user.Id);
+            if (student != null && (!user.StudentId.HasValue || user.StudentId.Value != student.Id))
+            {
+                user.StudentId = student.Id;
+                await _userManager.UpdateAsync(user);
+            }
+        }
         if (student == null) return RedirectToAction("Index", "StudentDashboard");
 
         var currentTerm = GetCurrentTerm();
@@ -84,7 +97,21 @@ public class StudentCoursesController : Controller
             return Challenge();
         }
         
-        var student = await _db.Students.FirstOrDefaultAsync(s => s.UserId == user.Id);
+        // Robust student lookup and relink
+        Student? student = null;
+        if (user.StudentId.HasValue)
+        {
+            student = await _db.Students.FirstOrDefaultAsync(s => s.Id == user.StudentId.Value);
+        }
+        if (student == null)
+        {
+            student = await _db.Students.FirstOrDefaultAsync(s => s.UserId == user.Id);
+            if (student != null && (!user.StudentId.HasValue || user.StudentId.Value != student.Id))
+            {
+                user.StudentId = student.Id;
+                await _userManager.UpdateAsync(user);
+            }
+        }
         if (student == null)
         {
             Console.WriteLine("[ENROLL] Student profile not found");
@@ -175,7 +202,21 @@ public class StudentCoursesController : Controller
     {
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return Challenge();
-        var student = await _db.Students.FirstOrDefaultAsync(s => s.UserId == user.Id);
+        // Robust student lookup
+        Student? student = null;
+        if (user.StudentId.HasValue)
+        {
+            student = await _db.Students.FirstOrDefaultAsync(s => s.Id == user.StudentId.Value);
+        }
+        if (student == null)
+        {
+            student = await _db.Students.FirstOrDefaultAsync(s => s.UserId == user.Id);
+            if (student != null && (!user.StudentId.HasValue || user.StudentId.Value != student.Id))
+            {
+                user.StudentId = student.Id;
+                await _userManager.UpdateAsync(user);
+            }
+        }
         if (student == null) return RedirectToAction("Index", "StudentDashboard");
 
         var term = GetCurrentTerm();

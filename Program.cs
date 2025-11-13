@@ -262,10 +262,54 @@ app.MapGet("/api/dashboard/student/diag", async (AppDbContext db, UserManager<Ap
     {
         var user = accessor.HttpContext?.User != null ? await userManager.GetUserAsync(accessor.HttpContext.User) : null;
         var userId = user?.Id ?? "(anon)";
+        var roles = user != null ? await userManager.GetRolesAsync(user) : new List<string>();
 
-        var student = user != null
-            ? await db.Students.Include(s => s.Enrollments).ThenInclude(e => e.Course).FirstOrDefaultAsync(s => s.UserId == user.Id)
-            : null;
+        // Robust lookup and auto-heal: prefer StudentId, then UserId; create minimal profile if none and user is in Student role
+        Student? student = null;
+        if (user != null)
+        {
+            if (user.StudentId.HasValue)
+            {
+                student = await db.Students.Include(s => s.Enrollments).ThenInclude(e => e.Course)
+                    .FirstOrDefaultAsync(s => s.Id == user.StudentId.Value);
+            }
+            if (student == null)
+            {
+                student = await db.Students.Include(s => s.Enrollments).ThenInclude(e => e.Course)
+                    .FirstOrDefaultAsync(s => s.UserId == user.Id);
+                if (student != null && (!user.StudentId.HasValue || user.StudentId.Value != student.Id))
+                {
+                    user.StudentId = student.Id;
+                    await userManager.UpdateAsync(user);
+                }
+            }
+            if (student == null && roles.Contains("Student"))
+            {
+                // Create a barebones student profile to unblock dashboard
+                var dept = await db.Departments.OrderBy(d => d.Id).FirstOrDefaultAsync();
+                if (dept == null)
+                {
+                    dept = new Department { Name = "General", Code = "GEN" };
+                    db.Departments.Add(dept);
+                    await db.SaveChangesAsync();
+                }
+                student = new Student
+                {
+                    UserId = user.Id,
+                    Name = ($"{user.FirstName} {user.LastName}").Trim(),
+                    Email = user.Email ?? user.UserName ?? string.Empty,
+                    Major = dept.Name,
+                    DepartmentId = dept.Id,
+                    EnrollmentDate = DateTime.UtcNow.Date,
+                    Gpa = 0m,
+                    TotalCredits = 120
+                };
+                db.Students.Add(student);
+                await db.SaveChangesAsync();
+                user.StudentId = student.Id;
+                await userManager.UpdateAsync(user);
+            }
+        }
 
         var enrollments = student?.Enrollments ?? new List<Enrollment>();
         var withNullCourse = enrollments.Count(e => e.Course == null);
@@ -281,6 +325,7 @@ app.MapGet("/api/dashboard/student/diag", async (AppDbContext db, UserManager<Ap
         return Results.Json(new
         {
             userId,
+            isStudentRole = roles.Contains("Student"),
             hasStudent = student != null,
             enrollmentsTotal = enrollments.Count,
             withNullCourse,

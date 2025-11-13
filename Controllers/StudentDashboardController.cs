@@ -29,14 +29,22 @@ public class StudentDashboardController : Controller
             {
                 return Challenge();
             }
-        // Ensure a Student profile exists for this identity (auto-heal here as a backup)
-        var existing = await _context.Students.FirstOrDefaultAsync(s => s.UserId == user.Id);
+        // Ensure a Student profile exists for this identity (auto-heal + link using StudentId if present)
+        Student? existing = null;
+        if (user.StudentId.HasValue)
+        {
+            existing = await _context.Students.FirstOrDefaultAsync(s => s.Id == user.StudentId.Value);
+        }
+        if (existing == null)
+        {
+            existing = await _context.Students.FirstOrDefaultAsync(s => s.UserId == user.Id);
+        }
         if (existing == null)
         {
             var dept = await _context.Departments.OrderBy(d => d.Id).FirstOrDefaultAsync();
             if (dept == null)
             {
-                dept = new Department { Name = "General" };
+                dept = new Department { Name = "General", Code = "GEN" };
                 _context.Departments.Add(dept);
                 await _context.SaveChangesAsync();
             }
@@ -53,6 +61,9 @@ public class StudentDashboardController : Controller
             };
             _context.Students.Add(existing);
             await _context.SaveChangesAsync();
+        }
+        if (!user.StudentId.HasValue || user.StudentId.Value != existing.Id)
+        {
             user.StudentId = existing.Id;
             await _userManager.UpdateAsync(user);
         }
@@ -68,7 +79,7 @@ public class StudentDashboardController : Controller
                     .ThenInclude(c => c!.CourseInstructors)
                         .ThenInclude(ci => ci.Instructor)
             .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.UserId == user.Id);
+            .FirstOrDefaultAsync(s => s.Id == existing.Id);
 
         if (student == null) return NotFound();
 
@@ -277,8 +288,35 @@ public class StudentDashboardController : Controller
             // Log the error and return a user-friendly error page
             Console.WriteLine($"[StudentDashboard Error] {ex.Message}");
             Console.WriteLine($"[StudentDashboard Stack] {ex.StackTrace}");
+            // Fallback: render dashboard with minimal empty model so the page loads
             ViewBag.ErrorMessage = $"Error loading dashboard: {ex.Message}";
-            return View("Error");
+            var empty = new StudentDashboardViewModel
+            {
+                Name = User?.Identity?.Name ?? "Student",
+                Major = "",
+                Gpa = 0,
+                CompletedCoursesCount = 0,
+                AdvisorName = null,
+                Phone = null,
+                AcademicLevel = null,
+                TotalCredits = 0,
+                CreditsInProgress = 0,
+                RequiredCredits = 120,
+                GradeLabels = new() { "A", "B", "C", "D", "F" },
+                GradeData = new() { 0, 0, 0, 0, 0 },
+                CourseLabels = new(),
+                CoursePerformance = new(),
+                CreditsPerTerm = new(),
+                TopCourses = new(),
+                WeakCourses = new(),
+                CompletedCourses = new(),
+                CurrentCourses = new(),
+                PendingCourses = new(),
+                AllEnrollments = new(),
+                RecentNotifications = new(),
+                SkillRadarData = new RadarChartData { Labels = new() { "No Data" }, Values = new() { 0 }, DatasetLabel = "Subject Competency" }
+            };
+            return View("Index", empty);
         }
     }
 
