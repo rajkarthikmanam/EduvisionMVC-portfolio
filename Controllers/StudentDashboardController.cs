@@ -22,11 +22,13 @@ public class StudentDashboardController : Controller
 
     public async Task<IActionResult> Index()
     {
-        var user = await _userManager.GetUserAsync(User);
-        if (user is null)
+        try
         {
-            return Challenge();
-        }
+            var user = await _userManager.GetUserAsync(User);
+            if (user is null)
+            {
+                return Challenge();
+            }
         // Ensure a Student profile exists for this identity (auto-heal here as a backup)
         var existing = await _context.Students.FirstOrDefaultAsync(s => s.UserId == user.Id);
         if (existing == null)
@@ -269,6 +271,15 @@ public class StudentDashboardController : Controller
         };
 
         return View(model);
+        }
+        catch (Exception ex)
+        {
+            // Log the error and return a user-friendly error page
+            Console.WriteLine($"[StudentDashboard Error] {ex.Message}");
+            Console.WriteLine($"[StudentDashboard Stack] {ex.StackTrace}");
+            ViewBag.ErrorMessage = $"Error loading dashboard: {ex.Message}";
+            return View("Error");
+        }
     }
 
     private static RadarChartData ComputeSkillRadarData(IEnumerable<Enrollment> completedEnrollments)
