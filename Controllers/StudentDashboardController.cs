@@ -130,9 +130,9 @@ public class StudentDashboardController : Controller
         }
         var allTerms = distinctTerms.OrderBy(TermOrder).ToArray();
         var termEnrollments = enrollments
-            .Where(e => e.Course != null && e.Status != EnrollmentStatus.Dropped)
+            .Where(e => e.Course != null && e.Status != EnrollmentStatus.Dropped && !string.IsNullOrWhiteSpace(e.Term))
             .GroupBy(e => e.Term)
-            .ToDictionary(g => g.Key, g => new { Count = g.Count(), Credits = g.Sum(e => e.Course!.Credits) });
+            .ToDictionary(g => g.Key ?? "", g => new { Count = g.Count(), Credits = g.Sum(e => e.Course!.Credits) });
         
         var termGroups = allTerms
             .Select(term => new { 
@@ -167,84 +167,93 @@ public class StudentDashboardController : Controller
             
             // Top Performance: Only the single highest grade course
             TopCourses = completedEnrollments
+                .Where(e => e.Course != null)
                 .OrderByDescending(e => e.NumericGrade)
                 .Take(1) // Only show THE top course
                 .Select(e => new EnrollmentSummary
                 {
                     CourseId = e.CourseId,
-                    CourseCode = e.Course!.Code,
-                    CourseTitle = e.Course!.Title,
+                    CourseCode = e.Course!.Code ?? "",
+                    CourseTitle = e.Course!.Title ?? "",
                     Credits = e.Course!.Credits,
-                    Term = e.Term,
+                    Term = e.Term ?? "",
                     Grade = e.NumericGrade,
                     InstructorName = e.Course!.CourseInstructors
+                        .Where(ci => ci.Instructor != null)
                         .Select(ci => $"Dr. {ci.Instructor!.LastName}")
                         .FirstOrDefault() ?? "TBA",
-                    Department = e.Course!.Department!.Name
+                    Department = e.Course!.Department?.Name ?? "General"
                 }).ToList(),
 
             // Areas for Improvement: Courses with grade <= 2.0
             WeakCourses = completedEnrollments
-                .Where(e => e.NumericGrade <= 2.0m)
+                .Where(e => e.Course != null && e.NumericGrade <= 2.0m)
                 .OrderBy(e => e.NumericGrade)
                 .Select(e => new EnrollmentSummary
                 {
                     CourseId = e.CourseId,
-                    CourseCode = e.Course!.Code,
-                    CourseTitle = e.Course!.Title,
+                    CourseCode = e.Course!.Code ?? "",
+                    CourseTitle = e.Course!.Title ?? "",
                     Credits = e.Course!.Credits,
-                    Term = e.Term,
+                    Term = e.Term ?? "",
                     Grade = e.NumericGrade,
                     InstructorName = e.Course!.CourseInstructors
+                        .Where(ci => ci.Instructor != null)
                         .Select(ci => $"Dr. {ci.Instructor!.LastName}")
                         .FirstOrDefault() ?? "TBA",
-                    Department = e.Course!.Department!.Name
+                    Department = e.Course!.Department?.Name ?? "General"
                 }).ToList(),
 
             // All Completed Courses: All courses with grades
             CompletedCourses = completedEnrollments
+                .Where(e => e.Course != null)
                 .OrderByDescending(e => e.Term)
                 .ThenBy(e => e.Course!.Code)
                 .Select(e => new EnrollmentSummary
                 {
                     CourseId = e.CourseId,
-                    CourseCode = e.Course!.Code,
-                    CourseTitle = e.Course!.Title,
+                    CourseCode = e.Course!.Code ?? "",
+                    CourseTitle = e.Course!.Title ?? "",
                     Credits = e.Course!.Credits,
-                    Term = e.Term,
+                    Term = e.Term ?? "",
                     Grade = e.NumericGrade,
                     InstructorName = e.Course!.CourseInstructors
+                        .Where(ci => ci.Instructor != null)
                         .Select(ci => $"Dr. {ci.Instructor!.LastName}")
                         .FirstOrDefault() ?? "TBA",
-                    Department = e.Course!.Department!.Name
+                    Department = e.Course!.Department?.Name ?? "General"
                 }).ToList(),
 
             CurrentCourses = currentEnrollments
+                .Where(e => e.Course != null)
                 .Select(e => new EnrollmentSummary
                 {
                     CourseId = e.CourseId,
-                    CourseCode = e.Course!.Code,
-                    CourseTitle = e.Course!.Title,
+                    CourseCode = e.Course!.Code ?? "",
+                    CourseTitle = e.Course!.Title ?? "",
                     Credits = e.Course!.Credits,
-                    Term = e.Term,
+                    Term = e.Term ?? "",
                     InstructorName = e.Course!.CourseInstructors
+                        .Where(ci => ci.Instructor != null)
                         .Select(ci => $"Dr. {ci.Instructor!.LastName}")
                         .FirstOrDefault() ?? "TBA",
-                    Department = e.Course!.Department!.Name
+                    Department = e.Course!.Department?.Name ?? "General"
                 }).ToList(),
 
             PendingCourses = pendingEnrollments
+                .Where(e => e.Course != null)
                 .Select(e => new EnrollmentSummary
                 {
                     CourseId = e.CourseId,
-                    CourseCode = e.Course!.Code,
-                    CourseTitle = e.Course!.Title,
+                    CourseCode = e.Course!.Code ?? "",
+                    CourseTitle = e.Course!.Title ?? "",
                     Credits = e.Course!.Credits,
-                    Term = e.Term,
+                    Term = e.Term ?? "",
                     InstructorName = e.Course!.CourseInstructors
+                        .Where(ci => ci.Instructor != null)
                         .Select(ci => $"Dr. {ci.Instructor!.LastName}")
                         .FirstOrDefault() ?? "TBA",
-                    Department = e.Course!.Department!.Name
+                    Department = e.Course!.Department?.Name ?? "General"
                 }).ToList(),
 
             AllEnrollments = enrollments.ToList(),
