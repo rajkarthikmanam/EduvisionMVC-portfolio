@@ -95,7 +95,9 @@ public class StudentDashboardController : Controller
             : 0m;
 
         // Calculate completed credits from graded enrollments
-        var completedCredits = gradedEnrollments.Sum(e => e.Course!.Credits);
+        var completedCredits = gradedEnrollments
+            .Where(e => e.Course != null)
+            .Sum(e => e.Course!.Credits);
 
         // If no completed (graded) credits, force GPA display to 0.00 even if legacy value persisted
         if (!gradedEnrollments.Any())
@@ -150,7 +152,7 @@ public class StudentDashboardController : Controller
             Phone = student!.Phone,
             AcademicLevel = student!.AcademicLevel,
             TotalCredits = completedCredits, // Completed credits from enrollments
-            CreditsInProgress = currentEnrollments.Sum(e => e.Course!.Credits),
+            CreditsInProgress = currentEnrollments.Where(e => e.Course != null).Sum(e => e.Course!.Credits),
             RequiredCredits = student.TotalCredits, // Total credits required (from Student table)
             
             // Grade distribution
