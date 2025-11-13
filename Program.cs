@@ -254,4 +254,59 @@ app.MapGet("/api/dashboard/admin/capacity2", async (AppDbContext db) =>
     return Results.Json(new { labels, current, capacity, alerts });
 });
 
+// --- Minimal Student Dashboard Diagnostics ---
+// Provides a lean snapshot to troubleshoot production errors without invoking full MVC controller logic.
+app.MapGet("/api/dashboard/student/diag", async (AppDbContext db, UserManager<ApplicationUser> userManager, IHttpContextAccessor accessor) =>
+{
+    try
+    {
+        var user = accessor.HttpContext?.User != null ? await userManager.GetUserAsync(accessor.HttpContext.User) : null;
+        var userId = user?.Id ?? "(anon)";
+
+        var student = user != null
+            ? await db.Students.Include(s => s.Enrollments).ThenInclude(e => e.Course).FirstOrDefaultAsync(s => s.UserId == user.Id)
+            : null;
+
+        var enrollments = student?.Enrollments ?? new List<Enrollment>();
+        var withNullCourse = enrollments.Count(e => e.Course == null);
+        var distinctTerms = enrollments.Select(e => e.Term).Where(t => !string.IsNullOrWhiteSpace(t)).Distinct().OrderBy(t => t).ToList();
+        var completed = enrollments.Count(e => e.NumericGrade.HasValue);
+        var active = enrollments.Count(e => !e.NumericGrade.HasValue && e.Status == EnrollmentStatus.Approved);
+        var pending = enrollments.Count(e => !e.NumericGrade.HasValue && e.Status == EnrollmentStatus.Pending);
+        var dropped = enrollments.Count(e => e.Status == EnrollmentStatus.Dropped);
+
+        var creditsCompleted = enrollments.Where(e => e.NumericGrade.HasValue && e.Course != null).Sum(e => e.Course!.Credits);
+        var creditsInProgress = enrollments.Where(e => !e.NumericGrade.HasValue && e.Course != null && (e.Status == EnrollmentStatus.Approved || e.Status == EnrollmentStatus.Pending)).Sum(e => e.Course!.Credits);
+
+        return Results.Json(new
+        {
+            userId,
+            hasStudent = student != null,
+            enrollmentsTotal = enrollments.Count,
+            withNullCourse,
+            distinctTerms,
+            completed,
+            active,
+            pending,
+            dropped,
+            creditsCompleted,
+            creditsInProgress,
+            requiredCredits = student?.TotalCredits,
+            sample = enrollments.Take(5).Select(e => new
+            {
+                e.Id,
+                e.Term,
+                e.Status,
+                e.NumericGrade,
+                courseCode = e.Course?.Code,
+                courseCredits = e.Course?.Credits
+            }).ToList()
+        });
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new { error = ex.Message, stack = ex.StackTrace?.Split('\n').Take(5) });
+    }
+});
+
 app.Run();
