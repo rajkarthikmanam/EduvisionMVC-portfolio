@@ -46,6 +46,6 @@ public class Student
         .Sum(e => e.Course?.Credits ?? 0);
 
     public int CompletedCredits => Enrollments
-        .Where(e => e.Status == EnrollmentStatus.Completed && e.NumericGrade.HasValue)
+        .Where(e => e.Status == EnrollmentStatus.Completed && e.NumericGrade.HasValue && e.NumericGrade >= 1.0m)
         .Sum(e => e.Course?.Credits ?? 0);
 }

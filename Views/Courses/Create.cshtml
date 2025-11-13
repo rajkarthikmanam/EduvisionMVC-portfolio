@@ -22,14 +22,14 @@
     </div>
     <div class="mb-3">
         <label asp-for="Credits" class="form-label"></label>
-        <input asp-for="Credits" class="form-control" />
+        <input asp-for="Credits" class="form-control" type="number" step="1" min="0" max="120" />
         <span asp-validation-for="Credits" class="text-danger"></span>
     </div>
     <div class="row">
         <div class="col-md-4">
             <div class="mb-3">
                 <label asp-for="Capacity" class="form-label"></label>
-                <input asp-for="Capacity" class="form-control" />
+                <input asp-for="Capacity" class="form-control" type="number" step="1" min="0" max="500" />
                 <span asp-validation-for="Capacity" class="text-danger"></span>
             </div>
         </div>

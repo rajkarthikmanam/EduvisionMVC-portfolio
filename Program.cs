@@ -319,7 +319,8 @@ app.MapGet("/api/dashboard/student/diag", async (AppDbContext db, UserManager<Ap
         var pending = enrollments.Count(e => !e.NumericGrade.HasValue && e.Status == EnrollmentStatus.Pending);
         var dropped = enrollments.Count(e => e.Status == EnrollmentStatus.Dropped);
 
-        var creditsCompleted = enrollments.Where(e => e.NumericGrade.HasValue && e.Course != null).Sum(e => e.Course!.Credits);
+        // Only count credits from passing grades (>= 1.0 / D or better); failed courses (< 1.0) don't count toward completion
+        var creditsCompleted = enrollments.Where(e => e.NumericGrade.HasValue && e.NumericGrade >= 1.0m && e.Course != null).Sum(e => e.Course!.Credits);
         var creditsInProgress = enrollments.Where(e => !e.NumericGrade.HasValue && e.Course != null && (e.Status == EnrollmentStatus.Approved || e.Status == EnrollmentStatus.Pending)).Sum(e => e.Course!.Credits);
 
         return Results.Json(new

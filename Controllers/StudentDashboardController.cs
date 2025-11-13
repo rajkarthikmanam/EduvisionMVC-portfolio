@@ -107,9 +107,10 @@ public class StudentDashboardController : Controller
             ? gradedEnrollments.Average(e => e.NumericGrade!.Value)
             : 0m;
 
-        // Calculate completed credits from graded enrollments
+        // Calculate completed credits: ONLY from PASSING grades (>= 1.0 / D or better)
+        // Courses with grade < 1.0 (F) do NOT count toward degree completion
         var completedCredits = gradedEnrollments
-            .Where(e => e.Course != null)
+            .Where(e => e.Course != null && e.NumericGrade >= 1.0m)
             .Sum(e => e.Course!.Credits);
 
         // If no completed (graded) credits, force GPA display to 0.00 even if legacy value persisted
@@ -142,10 +143,14 @@ public class StudentDashboardController : Controller
             return int.MaxValue - 1;
         }
         var allTerms = distinctTerms.OrderBy(TermOrder).ToArray();
+        // Credits per term: only count passing grades (>= 1.0) for completed courses
         var termEnrollments = enrollments
             .Where(e => e.Course != null && e.Status != EnrollmentStatus.Dropped && !string.IsNullOrWhiteSpace(e.Term))
             .GroupBy(e => e.Term)
-            .ToDictionary(g => g.Key ?? "", g => new { Count = g.Count(), Credits = g.Sum(e => e.Course!.Credits) });
+            .ToDictionary(g => g.Key ?? "", g => new { 
+                Count = g.Count(), 
+                Credits = g.Where(e => !e.NumericGrade.HasValue || e.NumericGrade >= 1.0m).Sum(e => e.Course!.Credits) 
+            });
         
         var termGroups = allTerms
             .Select(term => new { 
