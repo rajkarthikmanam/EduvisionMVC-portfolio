@@ -355,4 +355,54 @@ app.MapGet("/api/dashboard/student/diag", async (AppDbContext db, UserManager<Ap
     }
 });
 
+// --- Student Dashboard Live Refresh API (called by client-side JavaScript) ---
+app.MapGet("/api/dashboard/student", async (AppDbContext db, UserManager<ApplicationUser> userManager, IHttpContextAccessor accessor) =>
+{
+    try
+    {
+        var user = accessor.HttpContext?.User != null ? await userManager.GetUserAsync(accessor.HttpContext.User) : null;
+        if (user == null) return Results.Json(new { error = "Not authenticated" });
+
+        Student? student = null;
+        if (user.StudentId.HasValue)
+        {
+            student = await db.Students.Include(s => s.Enrollments).ThenInclude(e => e.Course)
+                .FirstOrDefaultAsync(s => s.Id == user.StudentId.Value);
+        }
+        if (student == null)
+        {
+            student = await db.Students.Include(s => s.Enrollments).ThenInclude(e => e.Course)
+                .FirstOrDefaultAsync(s => s.UserId == user.Id);
+        }
+        if (student == null) return Results.Json(new { error = "No student profile" });
+
+        var enrollments = student.Enrollments ?? new List<Enrollment>();
+        
+        // Only count credits from PASSING grades (>= 1.0 / D or better); failed courses don't count
+        var totalCredits = enrollments
+            .Where(e => e.NumericGrade.HasValue && e.NumericGrade >= 1.0m && e.Course != null)
+            .Sum(e => e.Course!.Credits);
+        
+        var creditsInProgress = enrollments
+            .Where(e => !e.NumericGrade.HasValue && e.Course != null && e.Status == EnrollmentStatus.Approved)
+            .Sum(e => e.Course!.Credits);
+        
+        var currentCoursesCount = enrollments.Count(e => !e.NumericGrade.HasValue && e.Status == EnrollmentStatus.Approved);
+        var completedCourses = enrollments.Count(e => e.NumericGrade.HasValue);
+
+        return Results.Json(new
+        {
+            totalCredits,
+            creditsInProgress,
+            requiredCredits = student.TotalCredits,
+            currentCoursesCount,
+            completedCourses
+        });
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new { error = ex.Message });
+    }
+});
+
 app.Run();
